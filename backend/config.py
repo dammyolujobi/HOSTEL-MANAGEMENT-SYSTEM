@@ -9,19 +9,21 @@ load_dotenv()
 
 class Settings(BaseSettings):
     # Database components
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASSWORD: str
-    DB_NAME: str
+    DB_HOST: str = "autorack.proxy.rlwy.net"
+    DB_PORT: int = 17685
+    DB_USER: str = "root" 
+    DB_PASSWORD: str = "mkBGclXpkhFkwAXFdHpFZFKLJnqpONql"
+    DB_NAME: str = "railway"
     DB_CHARSET: str = "utf8mb4"
     DB_CONNECTION_TIMEOUT: int = 60
     DB_SSL_DISABLED: bool = True
     
     # JWT
-    SECRET_KEY: str
+    SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30    # CORS - Railway deployment URLs  
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # CORS - Railway deployment URLs  
     FRONTEND_URL: str = "https://v0-frontend-build-with-next-js.vercel.app/"
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
     
@@ -29,7 +31,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     APP_NAME: str = "Hostel Management System API"
     VERSION: str = "1.0.0"
-    PORT: int = 8000    
+    PORT: int = 8000
+    
     @computed_field
     @property  
     def ALLOWED_ORIGINS_LIST(self) -> List[str]:

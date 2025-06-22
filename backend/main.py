@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from database.database import engine, Base
 from api.routes import users, maintenance_requests, auth
 
 # Create FastAPI app
@@ -29,11 +28,14 @@ app.include_router(maintenance_requests.router, prefix="/api/v1")
 async def startup_event():
     """Initialize database tables on startup"""
     try:
+        from database.database import engine, Base
+        import models.models  # Import models module
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-        print("Please check your database configuration in .env file")
+        print(f"⚠️ Database connection issue: {e}")
+        print("Application will start but database features may not work")
+        # Don't fail the startup, just log the error
 
 @app.get("/")
 async def root():

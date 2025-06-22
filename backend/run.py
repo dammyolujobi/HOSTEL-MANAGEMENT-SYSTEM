@@ -4,8 +4,7 @@ Startup script for the Hostel Management System Backend
 """
 import sys
 import os
-from database.database import engine, Base
-from models.models import *  # Import all models
+
 # Add the backend directory to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,7 +38,8 @@ def check_database_connection():
 def create_tables():
     """Create database tables"""
     try:
-        
+        from database.database import engine, Base
+        import models.models  # Import models module
         
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
