@@ -7,12 +7,12 @@ from urllib.parse import quote_plus
 load_dotenv()
 
 class Settings(BaseSettings):
-    # Database
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: int = int(os.getenv("DB_PORT", "3306"))
+    # Database - Railway MySQL Configuration
+    DB_HOST: str = os.getenv("DB_HOST", "autorack.proxy.rlwy.net")
+    DB_PORT: int = int(os.getenv("DB_PORT", "17685"))
     DB_USER: str = os.getenv("DB_USER", "root")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "")
-    DB_NAME: str = os.getenv("DB_NAME", "hostelmanagementsystem")
+    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "mkBGclXpkhFkwAXFdHpFZFKLJnqpONql")
+    DB_NAME: str = os.getenv("DB_NAME", "railway")
     
     # JWT
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key")
