@@ -25,7 +25,8 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         os.getenv("FRONTEND_URL", "http://localhost:3000"),
         "https://*.railway.app",
-        "https://*.up.railway.app"
+        "https://*.up.railway.app",
+        "https://v0-frontend-build-with-next-js.vercel.app"
     ]
     
     # App
