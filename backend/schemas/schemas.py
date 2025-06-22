@@ -100,14 +100,14 @@ class Specialty(SpecialtyBase):
     class Config:
         from_attributes = True
 
-# Hall Manager schemas
-class HallManagerBase(BaseModel):
+# Hall Officer schemas
+class HallOfficerBase(BaseModel):
     user_ID: int
 
-class HallManagerCreate(HallManagerBase):
+class HallOfficerCreate(HallOfficerBase):
     pass
 
-class HallManager(HallManagerBase):
+class HallOfficer(HallOfficerBase):
     manager_ID: int
     hall_ID: Optional[int] = None
     created_at: datetime
@@ -119,18 +119,14 @@ class HallManager(HallManagerBase):
 # Hall schemas
 class HallBase(BaseModel):
     hall_name: str
-    location: str
-    capacity: Optional[int] = None
-    manager_ID: int
+    officer_ID: int
 
 class HallCreate(HallBase):
     pass
 
 class HallUpdate(BaseModel):
     hall_name: Optional[str] = None
-    location: Optional[str] = None
-    capacity: Optional[int] = None
-    manager_ID: Optional[int] = None
+    officer_ID: Optional[int] = None
 
 class Hall(HallBase):
     hall_ID: int
@@ -237,7 +233,6 @@ class MaintenanceRequestBase(BaseModel):
     category_ID: int
     description: str
     availability: Optional[str] = None
-
     estimated_cost: Optional[Decimal] = None
 
 class MaintenanceRequestCreate(MaintenanceRequestBase):

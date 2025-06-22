@@ -105,8 +105,6 @@ class Hall(Base):
     
     hall_ID = Column(Integer, primary_key=True, autoincrement=True)
     hall_name = Column(String(100), nullable=False)
-    location = Column(String(200), nullable=False)
-    capacity = Column(Integer)
     officer_ID = Column(Integer, ForeignKey("hall_officer.manager_ID", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
@@ -122,8 +120,6 @@ class Room(Base):
     room_number = Column(String(10), nullable=False)
     hall_ID = Column(Integer, ForeignKey("hall.hall_ID", ondelete="RESTRICT"), nullable=False)
     floor_number = Column(Integer)
-    capacity = Column(Integer, default=1)
-    capacity = Column(Integer, default=1)
     created_at = Column(DateTime, default=func.current_timestamp())
     
     __table_args__ = (UniqueConstraint('room_number', 'hall_ID', name='unique_room_per_hall'),)

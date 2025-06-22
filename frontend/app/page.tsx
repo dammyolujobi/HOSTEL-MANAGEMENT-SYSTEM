@@ -98,7 +98,7 @@ export default function HomePage() {
                       <Button variant="outline" className="w-full justify-start" asChild>
                         <Link href="/dashboard?role=manager">
                           <Building2 className="h-4 w-4 mr-2" />
-                          Hall Manager
+                          Hall Officer
                         </Link>
                       </Button>
                       <Button variant="outline" className="w-full justify-start" asChild>

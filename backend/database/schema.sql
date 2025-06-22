@@ -72,8 +72,6 @@ CREATE TABLE Hall_Officer (
 CREATE TABLE Hall (
     hall_ID INT PRIMARY KEY AUTO_INCREMENT,
     hall_name VARCHAR(100) NOT NULL,
-    location VARCHAR(200) NOT NULL,
-    capacity INT,
     manager_ID INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -86,7 +84,6 @@ CREATE TABLE Room (
     room_number VARCHAR(10) NOT NULL,
     hall_ID INT NOT NULL,
     floor_number INT,
-    capacity INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hall_ID) REFERENCES Hall(hall_ID) ON DELETE RESTRICT,
     UNIQUE KEY unique_room_per_hall (room_number, hall_ID)
@@ -296,17 +293,17 @@ INSERT INTO User (name, email, phone_number,password, role) VALUES
 INSERT INTO Hall_Officer (user_ID) VALUES 
 (2);
 
-INSERT INTO Hall (hall_name, location, capacity, manager_ID) VALUES 
-('Watson Hall', 'North Campus', 200, 1),
-('Franklin Hall', 'South Campus', 150, 1);
+INSERT INTO Hall (hall_name, manager_ID) VALUES 
+('Watson Hall',  1),
+('Franklin Hall',  1);
 
 -- Update Hall_Officer with hall_ID after halls are created
 UPDATE Hall_Officer SET hall_ID = 1 WHERE manager_ID = 1;
 
-INSERT INTO Room (room_number, hall_ID, floor_number, capacity) VALUES 
-('101A', 1, 1, 2),
-('102A', 1, 1,1),
-('201B', 2, 2,  3);
+INSERT INTO Room (room_number, hall_ID, floor_number) VALUES 
+('101A', 1, 1 ),
+('102A', 1, 1),
+('201B', 2, 2);
 
 INSERT INTO Administrator (user_ID, admin_level) VALUES 
 (1, 'super_admin');
