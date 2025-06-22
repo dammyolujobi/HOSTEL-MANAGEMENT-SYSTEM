@@ -14,12 +14,6 @@ class UserRole(str, enum.Enum):
     MANAGER = "manager"
     ADMIN = "admin"
 
-class RoomType(str, enum.Enum):
-    SINGLE = "single"
-    DOUBLE = "double"
-    TRIPLE = "triple"
-    QUADRUPLE = "quadruple"  # Fixed typo
-
 class AdminLevel(str, enum.Enum):
     SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
@@ -91,21 +85,20 @@ class User(Base):
     
     # Relationships
     student = relationship("Student", back_populates="user", uselist=False)
-    hall_manager = relationship("HallManager", back_populates="user", uselist=False)
+    hall_officer = relationship("HallOfficer", back_populates="user", uselist=False)
     maintenance_officer = relationship("MaintenanceOfficer", back_populates="user", uselist=False)
     administrator = relationship("Administrator", back_populates="user", uselist=False)
     audit_logs = relationship("AuditLog", back_populates="user")
 
-class HallManager(Base):
-    __tablename__ = "hall_manager"
+class HallOfficer(Base):
+    __tablename__ = "hall_officer"
     
     manager_ID = Column(Integer, primary_key=True, autoincrement=True)
     user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
     created_at = Column(DateTime, default=func.current_timestamp())
-    
-    # Relationships
-    user = relationship("User", back_populates="hall_manager")
-    hall = relationship("Hall", back_populates="manager", uselist=False)
+      # Relationships
+    user = relationship("User", back_populates="hall_officer")
+    hall = relationship("Hall", back_populates="officer", uselist=False)
 
 class Hall(Base):
     __tablename__ = "hall"
@@ -114,22 +107,22 @@ class Hall(Base):
     hall_name = Column(String(100), nullable=False)
     location = Column(String(200), nullable=False)
     capacity = Column(Integer)
-    manager_ID = Column(Integer, ForeignKey("hall_manager.manager_ID", ondelete="RESTRICT"), nullable=False)
+    officer_ID = Column(Integer, ForeignKey("hall_officer.manager_ID", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
     # Relationships
-    manager = relationship("HallManager", back_populates="hall")
+    officer = relationship("HallOfficer", back_populates="hall")
     rooms = relationship("Room", back_populates="hall")
 
 class Room(Base):
     __tablename__ = "room"
     
-    room_ID = Column(Integer, primary_key=True, autoincrement=True)
+    room_ID = Column(Integer, primary_key=True, autoincrement=True)    
     room_number = Column(String(10), nullable=False)
     hall_ID = Column(Integer, ForeignKey("hall.hall_ID", ondelete="RESTRICT"), nullable=False)
     floor_number = Column(Integer)
-    room_type = Column(MySQL_ENUM('single', 'double', 'triple', 'quadruple', name='roomtype'), default='single')
+    capacity = Column(Integer, default=1)
     capacity = Column(Integer, default=1)
     created_at = Column(DateTime, default=func.current_timestamp())
     

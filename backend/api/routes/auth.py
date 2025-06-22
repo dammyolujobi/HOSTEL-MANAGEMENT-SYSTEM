@@ -36,11 +36,10 @@ DEFAULT_CREDENTIALS = {
         "password": "admin123",
         "name": "System Administrator",
         "role": "admin"
-    },
-    "manager": {
-        "email": "hall.manager@cu.edu.ng",
+    },    "manager": {
+        "email": "hall.officer@cu.edu.ng",
         "password": "manager123", 
-        "name": "Hall Manager",
+        "name": "Hall Officer",
         "role": "manager"
     },
     "officer": {
@@ -122,7 +121,7 @@ async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
     Default demo credentials:
     - Student: john.doe@stu.cu.edu.ng / student123
     - Admin: admin@cu.edu.ng / admin123  
-    - Hall Manager: hall.manager@cu.edu.ng / manager123
+    - Hall Officer: hall.officer@cu.edu.ng / manager123
     - Maintenance Officer: maintenance@cu.edu.ng / officer123
     """
     

@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS Officer_Assignment;
 DROP TABLE IF EXISTS Maintenance_Request;
 DROP TABLE IF EXISTS Student;
 DROP TABLE IF EXISTS Room;
-DROP TABLE IF EXISTS Hall_Manager;
+DROP TABLE IF EXISTS Hall_Officer;
 DROP TABLE IF EXISTS Hall;
 DROP TABLE IF EXISTS Maintenance_Officer;
 DROP TABLE IF EXISTS Administrator;
@@ -60,8 +60,8 @@ CREATE TABLE User (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Hall_Manager table (normalized - references User table)
-CREATE TABLE Hall_Manager (
+-- Create Hall_Officer table (normalized - references User table)
+CREATE TABLE Hall_Officer (
     manager_ID INT PRIMARY KEY AUTO_INCREMENT,
     user_ID INT NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -77,7 +77,7 @@ CREATE TABLE Hall (
     manager_ID INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (manager_ID) REFERENCES Hall_Manager(manager_ID) ON DELETE RESTRICT
+    FOREIGN KEY (manager_ID) REFERENCES Hall_Officer(manager_ID) ON DELETE RESTRICT
 );
 
 -- Create Room table (normalized - separate entity)
@@ -86,7 +86,6 @@ CREATE TABLE Room (
     room_number VARCHAR(10) NOT NULL,
     hall_ID INT NOT NULL,
     floor_number INT,
-    room_type ENUM('single', 'double', 'triple', 'quadruple') DEFAULT 'single',
     capacity INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hall_ID) REFERENCES Hall(hall_ID) ON DELETE RESTRICT,
@@ -197,10 +196,10 @@ CREATE INDEX idx_user_email ON User(email);
 CREATE INDEX idx_room_hall ON Room(hall_ID);
 CREATE INDEX idx_officer_specialty ON Maintenance_Officer(specialty_ID);
 
--- Add hall_ID column to Hall_Manager table and create foreign key constraint
+-- Add hall_ID column to Hall_Officer table and create foreign key constraint
 -- (Done after table creation to avoid circular dependency)
-ALTER TABLE Hall_Manager ADD COLUMN hall_ID INT UNIQUE;
-ALTER TABLE Hall_Manager ADD CONSTRAINT fk_hall_manager_hall 
+ALTER TABLE Hall_Officer ADD COLUMN hall_ID INT UNIQUE;
+ALTER TABLE Hall_Officer ADD CONSTRAINT fk_hall_officer_hall 
     FOREIGN KEY (hall_ID) REFERENCES Hall(hall_ID) ON DELETE SET NULL;
 
 -- Insert lookup data
@@ -294,20 +293,20 @@ INSERT INTO User (name, email, phone_number,password, role) VALUES
 ('Jane Student', 'jane.student@university.edu', '555-0123', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn1f','student'),
 ('Bob Officer', 'bob.officer@university.edu', '555-0004', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn63','officer');
 
-INSERT INTO Hall_Manager (user_ID) VALUES 
+INSERT INTO Hall_Officer (user_ID) VALUES 
 (2);
 
 INSERT INTO Hall (hall_name, location, capacity, manager_ID) VALUES 
 ('Watson Hall', 'North Campus', 200, 1),
 ('Franklin Hall', 'South Campus', 150, 1);
 
--- Update Hall_Manager with hall_ID after halls are created
-UPDATE Hall_Manager SET hall_ID = 1 WHERE manager_ID = 1;
+-- Update Hall_Officer with hall_ID after halls are created
+UPDATE Hall_Officer SET hall_ID = 1 WHERE manager_ID = 1;
 
-INSERT INTO Room (room_number, hall_ID, floor_number, room_type, capacity) VALUES 
-('101A', 1, 1, 'double', 2),
-('102A', 1, 1, 'single', 1),
-('201B', 2, 2, 'triple', 3);
+INSERT INTO Room (room_number, hall_ID, floor_number, capacity) VALUES 
+('101A', 1, 1, 2),
+('102A', 1, 1,1),
+('201B', 2, 2,  3);
 
 INSERT INTO Administrator (user_ID, admin_level) VALUES 
 (1, 'super_admin');

@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List
 from datetime import datetime, date
 from decimal import Decimal
-from models.models import UserRole, RoomType,AdminLevel, ActionType
+from models.models import UserRole, AdminLevel, ActionType
 import bcrypt
 
 
@@ -145,7 +145,6 @@ class RoomBase(BaseModel):
     room_number: str
     hall_ID: int
     floor_number: Optional[int] = None
-    room_type: RoomType = RoomType.SINGLE
     capacity: int = 1
 
 class RoomCreate(RoomBase):
@@ -154,7 +153,6 @@ class RoomCreate(RoomBase):
 class RoomUpdate(BaseModel):
     room_number: Optional[str] = None
     floor_number: Optional[int] = None
-    room_type: Optional[RoomType] = None
     capacity: Optional[int] = None
 
 class Room(RoomBase):
