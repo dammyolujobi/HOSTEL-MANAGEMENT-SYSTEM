@@ -55,9 +55,9 @@ def delete_maintenance_request(db: Session, request_id: int) -> bool:
         return True
     return False
 
-def get_requests_by_hall(db: Session, hall_id: int) -> List[MaintenanceRequest]:
+def get_requests_by_hall(db: Session, hall_name: str) -> List[MaintenanceRequest]:
     return db.query(MaintenanceRequest).join(MaintenanceRequest.room).filter(
-        MaintenanceRequest.room.has(hall_ID=hall_id)
+        MaintenanceRequest.room.has(hall_name=hall_name)
     ).all()
 
 def get_active_requests(db: Session) -> List[MaintenanceRequest]:

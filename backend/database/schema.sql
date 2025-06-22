@@ -55,7 +55,7 @@ CREATE TABLE User (
     email VARCHAR(100) UNIQUE NOT NULL,
     phone_number VARCHAR(20),
     password VARCHAR(255) NOT NULL,
-    role ENUM('student', 'officer', 'manager', 'admin') NOT NULL,
+    role ENUM('student', 'hall officer', 'maintenance officer', 'admin') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -282,38 +282,49 @@ VALUES (
     NEW.issue_ID
 );
 
--- Insert sample data for testing (normalized)
-INSERT INTO User (name, email, phone_number,password, role) VALUES 
-('John Admin', 'admin@university.edu', '555-0001', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn6i','admin'),
-('Sarah Manager', 'sarah.manager@university.edu', '555-0002','$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn6f' ,'manager'),
-('Mike Officer', 'mike.officer@university.edu', '555-0003', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn4f','officer'),
-('Jane Student', 'jane.student@university.edu', '555-0123', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn1f','student'),
-('Bob Officer', 'bob.officer@university.edu', '555-0004', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn63','officer');
+-- Insert sample data for testing (normalized) - FIXED VERSION
+INSERT INTO User (name, email, phone_number, password, role) VALUES 
+('John Admin', 'admin@university.edu', '555-0001', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn6i', 'admin'),
+('Mike Officer', 'mike.officer@university.edu', '555-0003', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn4f', 'hall officer'),
+('Jane Student', 'jane.student@university.edu', '555-0123', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn1f', 'student'),
+('Bob MaintenanceOfficer', 'bob.maintenance@university.edu', '555-0004', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn63', 'maintenance officer'),
+('Sarah MaintenanceOfficer', 'sarah.maintenance@university.edu', '555-0005', '$2b$12$LQv3c1yqBw2FVK4AjKdO3eF8QL.vI7YB8.eCcJw4vGZxQ3ZxjCn64', 'maintenance officer');
 
 INSERT INTO Hall_Officer (user_ID) VALUES 
 (2);
 
 INSERT INTO Hall (hall_name, manager_ID) VALUES 
-('Watson Hall',  1),
-('Franklin Hall',  1);
+-- Male Halls of Residence
+('Peter Hall', 1),
+('Paul Hall', 1),
+('John Hall', 1),
+('Joseph Hall', 1),
+('Daniel Hall', 1),
+-- Female Halls of Residence
+('Esther Hall', 1),
+('Mary Hall', 1),
+('Deborah Hall', 1),
+('Lydia Hall', 1),
+('Dorcas Hall', 1);
 
 -- Update Hall_Officer with hall_ID after halls are created
 UPDATE Hall_Officer SET hall_ID = 1 WHERE manager_ID = 1;
 
 INSERT INTO Room (room_number, hall_ID, floor_number) VALUES 
-('101A', 1, 1 ),
+('101A', 1, 1),
 ('102A', 1, 1),
 ('201B', 2, 2);
 
 INSERT INTO Administrator (user_ID, admin_level) VALUES 
 (1, 'super_admin');
 
+-- FIXED: Now using correct user_IDs that exist and have maintenance officer role
 INSERT INTO Maintenance_Officer (user_ID, specialty_ID, employee_number, hire_date) VALUES 
-(3, 1, 'EMP001', '2024-01-15'),
-(5, 3, 'EMP002', '2024-02-01');
+(4, 1, 'EMP001', '2024-01-15'),  -- Bob MaintenanceOfficer (user_ID 4)
+(5, 3, 'EMP002', '2024-02-01');  -- Sarah MaintenanceOfficer (user_ID 5)
 
 INSERT INTO Student (user_ID, student_number, room_ID, enrollment_date) VALUES 
-(4, 'STU2024001', 1, '2024-08-15');
+(3, 'STU2024001', 1, '2024-08-15');  -- Jane Student (user_ID 3)
 
 -- Drop existing views if they exist
 DROP VIEW IF EXISTS active_requests;

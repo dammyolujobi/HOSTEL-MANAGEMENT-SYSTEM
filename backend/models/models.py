@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum, DECIMAL, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.mysql import ENUM as MySQL_ENUM
 import enum
@@ -10,8 +10,8 @@ Base = declarative_base()
 # Enum classes
 class UserRole(str, enum.Enum):
     STUDENT = "student"
-    OFFICER = "officer" 
-    MANAGER = "manager"
+    HALL_OFFICER = "officer" 
+    MAINTENANCE_OFFICER = "maintenance_officer"
     ADMIN = "admin"
 
 class AdminLevel(str, enum.Enum):
@@ -136,6 +136,7 @@ class Student(Base):
     student_ID = Column(Integer, primary_key=True, autoincrement=True)
     user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
     student_number = Column(String(20), unique=True)
+    preferred_hall_ID = Column(Integer, ForeignKey("hall.hall_ID", ondelete="SET NULL"))
     room_ID = Column(Integer, ForeignKey("room.room_ID", ondelete="SET NULL"))
     enrollment_date = Column(Date)
     created_at = Column(DateTime, default=func.current_timestamp())
@@ -143,6 +144,7 @@ class Student(Base):
     
     # Relationships
     user = relationship("User", back_populates="student")
+    preferred_hall = relationship("Hall", foreign_keys=[preferred_hall_ID])
     room = relationship("Room", back_populates="students")
     maintenance_requests = relationship("MaintenanceRequest", back_populates="student")
 
@@ -176,8 +178,7 @@ class Administrator(Base):
     user = relationship("User", back_populates="administrator")
 
 class MaintenanceRequest(Base):
-    __tablename__ = "maintenance_request"
-    
+    __tablename__ = "maintenance_request"    
     issue_ID = Column(Integer, primary_key=True, autoincrement=True)
     student_ID = Column(Integer, ForeignKey("student.student_ID", ondelete="RESTRICT"), nullable=False)
     room_ID = Column(Integer, ForeignKey("room.room_ID", ondelete="RESTRICT"), nullable=False)
