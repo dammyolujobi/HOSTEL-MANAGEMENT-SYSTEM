@@ -35,7 +35,7 @@ async def startup_event():
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
         
-        if not existing_tables or 'user' not in existing_tables:
+        if not existing_tables or 'User' not in existing_tables:
             print("🔄 Creating database tables...")
             Base.metadata.create_all(bind=engine)
             print("✅ Database tables created successfully")

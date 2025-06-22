@@ -38,7 +38,7 @@ class Roles(Base):
     created_at = Column(DateTime, default=func.current_timestamp())
 
 class Category(Base):
-    __tablename__ = "category"
+    __tablename__ = "Category"
     
     category_ID = Column(Integer, primary_key=True, autoincrement=True)
     category_name = Column(String(50), nullable=False, unique=True)
@@ -49,7 +49,7 @@ class Category(Base):
     maintenance_requests = relationship("MaintenanceRequest", back_populates="category")
 
 class Status(Base):
-    __tablename__ = "status"
+    __tablename__ = "Status"
     
     status_ID = Column(Integer, primary_key=True, autoincrement=True)
     status_name = Column(String(50), nullable=False, unique=True)
@@ -60,7 +60,7 @@ class Status(Base):
     maintenance_requests = relationship("MaintenanceRequest", back_populates="status")
 
 class Specialty(Base):
-    __tablename__ = "specialty"
+    __tablename__ = "Specialty"
     
     specialty_ID = Column(Integer, primary_key=True, autoincrement=True)
     specialty_name = Column(String(50), nullable=False, unique=True)
@@ -72,14 +72,14 @@ class Specialty(Base):
 
 # Main Tables
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "User"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
     phone_number = Column(String(20))
     password = Column(String(255))
-    role = Column(MySQL_ENUM('student', 'officer', 'manager', 'admin', name='userrole'), nullable=False)
+    role = Column(MySQL_ENUM('student', 'hall officer', 'maintenance officer', 'admin', name='userrole'), nullable=False)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
@@ -91,21 +91,20 @@ class User(Base):
     audit_logs = relationship("AuditLog", back_populates="user")
 
 class HallOfficer(Base):
-    __tablename__ = "hall_officer"
-    
+    __tablename__ = "Hall_Officer"
     manager_ID = Column(Integer, primary_key=True, autoincrement=True)
-    user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_ID = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, unique=True)
     created_at = Column(DateTime, default=func.current_timestamp())
       # Relationships
     user = relationship("User", back_populates="hall_officer")
     hall = relationship("Hall", back_populates="officer", uselist=False)
 
 class Hall(Base):
-    __tablename__ = "hall"
+    __tablename__ = "Hall"
     
     hall_ID = Column(Integer, primary_key=True, autoincrement=True)
     hall_name = Column(String(100), nullable=False)
-    officer_ID = Column(Integer, ForeignKey("hall_officer.manager_ID", ondelete="RESTRICT"), nullable=False)
+    officer_ID = Column(Integer, ForeignKey("Hall_Officer.manager_ID", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
@@ -114,11 +113,11 @@ class Hall(Base):
     rooms = relationship("Room", back_populates="hall")
 
 class Room(Base):
-    __tablename__ = "room"
+    __tablename__ = "Room"
     
     room_ID = Column(Integer, primary_key=True, autoincrement=True)    
     room_number = Column(String(10), nullable=False)
-    hall_ID = Column(Integer, ForeignKey("hall.hall_ID", ondelete="RESTRICT"), nullable=False)
+    hall_ID = Column(Integer, ForeignKey("Hall.hall_ID", ondelete="RESTRICT"), nullable=False)
     floor_number = Column(Integer)
     created_at = Column(DateTime, default=func.current_timestamp())
     
@@ -131,29 +130,25 @@ class Room(Base):
     maintenance_history = relationship("RoomMaintenanceHistory", back_populates="room")
 
 class Student(Base):
-    __tablename__ = "student"
-    
+    __tablename__ = "Student"
     student_ID = Column(Integer, primary_key=True, autoincrement=True)
-    user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_ID = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, unique=True)
     student_number = Column(String(20), unique=True)
-    preferred_hall_ID = Column(Integer, ForeignKey("hall.hall_ID", ondelete="SET NULL"))
-    room_ID = Column(Integer, ForeignKey("room.room_ID", ondelete="SET NULL"))
+    room_ID = Column(Integer, ForeignKey("Room.room_ID", ondelete="SET NULL"))
     enrollment_date = Column(Date)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
     # Relationships
     user = relationship("User", back_populates="student")
-    preferred_hall = relationship("Hall", foreign_keys=[preferred_hall_ID])
     room = relationship("Room", back_populates="students")
     maintenance_requests = relationship("MaintenanceRequest", back_populates="student")
 
 class MaintenanceOfficer(Base):
-    __tablename__ = "maintenance_officer"
-    
+    __tablename__ = "Maintenance_Officer"
     officer_ID = Column(Integer, primary_key=True, autoincrement=True)
-    user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
-    specialty_ID = Column(Integer, ForeignKey("specialty.specialty_ID", ondelete="RESTRICT"), nullable=False)
+    user_ID = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, unique=True)
+    specialty_ID = Column(Integer, ForeignKey("Specialty.specialty_ID", ondelete="RESTRICT"), nullable=False)
     employee_number = Column(String(20), unique=True)
     hire_date = Column(Date)
     created_at = Column(DateTime, default=func.current_timestamp())
@@ -166,10 +161,9 @@ class MaintenanceOfficer(Base):
     workload = relationship("OfficerWorkload", back_populates="officer", uselist=False)
 
 class Administrator(Base):
-    __tablename__ = "administrator"
-    
+    __tablename__ = "Administrator"
     admin_ID = Column(Integer, primary_key=True, autoincrement=True)
-    user_ID = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_ID = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, unique=True)
     admin_level = Column(Enum(AdminLevel), default=AdminLevel.ADMIN)
     permissions = Column(Text)  # JSON field for permissions
     created_at = Column(DateTime, default=func.current_timestamp())
@@ -178,12 +172,12 @@ class Administrator(Base):
     user = relationship("User", back_populates="administrator")
 
 class MaintenanceRequest(Base):
-    __tablename__ = "maintenance_request"    
+    __tablename__ = "Maintenance_Request"    
     issue_ID = Column(Integer, primary_key=True, autoincrement=True)
-    student_ID = Column(Integer, ForeignKey("student.student_ID", ondelete="RESTRICT"), nullable=False)
-    room_ID = Column(Integer, ForeignKey("room.room_ID", ondelete="RESTRICT"), nullable=False)
-    category_ID = Column(Integer, ForeignKey("category.category_ID", ondelete="RESTRICT"), nullable=False)
-    status_ID = Column(Integer, ForeignKey("status.status_ID", ondelete="RESTRICT"), nullable=False, default=1)
+    student_ID = Column(Integer, ForeignKey("Student.student_ID", ondelete="RESTRICT"), nullable=False)
+    room_ID = Column(Integer, ForeignKey("Room.room_ID", ondelete="RESTRICT"), nullable=False)
+    category_ID = Column(Integer, ForeignKey("Category.category_ID", ondelete="RESTRICT"), nullable=False)
+    status_ID = Column(Integer, ForeignKey("Status.status_ID", ondelete="RESTRICT"), nullable=False, default=1)
     description = Column(Text, nullable=False)
     availability = Column(Text)
     submission_timestamp = Column(DateTime, default=func.current_timestamp())
@@ -204,7 +198,7 @@ class ActiveRequests(Base):
     __tablename__ = "active_requests"
     
     request_id = Column(Integer, primary_key=True, autoincrement=True)
-    issue_ID = Column(Integer, ForeignKey("maintenance_request.issue_ID", ondelete="CASCADE"), nullable=False)
+    issue_ID = Column(Integer, ForeignKey("Maintenance_Request.issue_ID", ondelete="CASCADE"), nullable=False)
     priority_level = Column(Integer, default=1)
     created_at = Column(DateTime, default=func.current_timestamp())
     
@@ -212,11 +206,10 @@ class ActiveRequests(Base):
     maintenance_request = relationship("MaintenanceRequest")
 
 class OfficerAssignment(Base):
-    __tablename__ = "officer_assignment"
-    
+    __tablename__ = "Officer_Assignment"
     assignment_ID = Column(Integer, primary_key=True, autoincrement=True)
-    issue_ID = Column(Integer, ForeignKey("maintenance_request.issue_ID", ondelete="CASCADE"), nullable=False)
-    officer_ID = Column(Integer, ForeignKey("maintenance_officer.officer_ID", ondelete="CASCADE"), nullable=False)
+    issue_ID = Column(Integer, ForeignKey("Maintenance_Request.issue_ID", ondelete="CASCADE"), nullable=False)
+    officer_ID = Column(Integer, ForeignKey("Maintenance_Officer.officer_ID", ondelete="CASCADE"), nullable=False)
     assignment_date = Column(DateTime, default=func.current_timestamp())
     estimated_completion_date = Column(DateTime)
     actual_completion_date = Column(DateTime)
@@ -233,7 +226,7 @@ class OfficerWorkload(Base):
     __tablename__ = "officer_workload"
     
     workload_id = Column(Integer, primary_key=True, autoincrement=True)
-    officer_ID = Column(Integer, ForeignKey("maintenance_officer.officer_ID", ondelete="CASCADE"), nullable=False, unique=True)
+    officer_ID = Column(Integer, ForeignKey("Maintenance_Officer.officer_ID", ondelete="CASCADE"), nullable=False, unique=True)
     active_assignments = Column(Integer, default=0)
     total_hours_week = Column(DECIMAL(5, 2), default=0.00)
     availability_status = Column(String(20), default="available")
@@ -245,9 +238,9 @@ class OfficerWorkload(Base):
 class RoomMaintenanceHistory(Base):
     __tablename__ = "room_maintenance_history"
     
-    history_id = Column(Integer, primary_key=True, autoincrement=True)
-    room_ID = Column(Integer, ForeignKey("room.room_ID", ondelete="RESTRICT"), nullable=False)
-    issue_ID = Column(Integer, ForeignKey("maintenance_request.issue_ID", ondelete="RESTRICT"), nullable=False)
+    history_id = Column(Integer, primary_key=True, autoincrement=True)    
+    room_ID = Column(Integer, ForeignKey("Room.room_ID", ondelete="RESTRICT"), nullable=False)
+    issue_ID = Column(Integer, ForeignKey("Maintenance_Request.issue_ID", ondelete="RESTRICT"), nullable=False)
     completion_date = Column(DateTime)
     cost = Column(DECIMAL(10, 2))
     notes = Column(Text)
@@ -258,17 +251,17 @@ class RoomMaintenanceHistory(Base):
     maintenance_request = relationship("MaintenanceRequest")
 
 class AuditLog(Base):
-    __tablename__ = "audit_log"
+    __tablename__ = "Audit_Log"
     
-    log_ID = Column(Integer, primary_key=True, autoincrement=True)    
-    user_ID = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"))
+    log_ID = Column(Integer, primary_key=True, autoincrement=True)      
+    user_ID = Column(Integer, ForeignKey("User.id", ondelete="SET NULL"))
     action_type = Column(Enum(ActionType), nullable=False)
     table_affected = Column(String(50))
     record_ID = Column(Integer)
     old_values = Column(Text)  # JSON field
     new_values = Column(Text)  # JSON field
     timestamp = Column(DateTime, default=func.current_timestamp())
-    issue_ID = Column(Integer, ForeignKey("maintenance_request.issue_ID", ondelete="SET NULL"))
+    issue_ID = Column(Integer, ForeignKey("Maintenance_Request.issue_ID", ondelete="SET NULL"))
     
     # Relationships
     user = relationship("User", back_populates="audit_logs")
