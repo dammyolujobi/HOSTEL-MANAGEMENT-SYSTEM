@@ -47,9 +47,9 @@ class Settings(BaseSettings):
         
         if isinstance(self.ALLOWED_ORIGINS, str):
             env_origins = [url.strip() for url in self.ALLOWED_ORIGINS.split(',') if url.strip()]
-            return list(set(base_origins + env_origins))
-        
-        return base_origins    
+            return list(set(base_origins + env_origins))        
+        return base_origins
+    
     @computed_field
     @property
     def DATABASE_URL(self) -> str:

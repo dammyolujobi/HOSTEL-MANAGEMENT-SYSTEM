@@ -11,9 +11,6 @@ app = FastAPI(
 )
 
 # Configure CORS
- # Import your settings
-
-# Replace your current CORS middleware with:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS_LIST,  # Use your computed field
@@ -32,8 +29,33 @@ async def startup_event():
     try:
         from database.database import engine, Base
         import models.models  # Import models module
-        Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully")
+        
+        # Check if tables exist, if not create them
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+        
+        if not existing_tables or 'user' not in existing_tables:
+            print("🔄 Creating database tables...")
+            Base.metadata.create_all(bind=engine)
+            print("✅ Database tables created successfully")
+            
+            # Run the database initialization script if tables were just created
+            try:
+                import subprocess
+                import os
+                init_script = os.path.join(os.path.dirname(__file__), 'init_db.py')
+                if os.path.exists(init_script):
+                    print("🔄 Running database initialization...")
+                    subprocess.run([
+                        'python', init_script
+                    ], check=True, capture_output=True, text=True)
+                    print("✅ Database initialization completed")
+            except Exception as init_e:
+                print(f"⚠️ Database initialization failed: {init_e}")
+        else:
+            print("✅ Database tables already exist")
+            
     except Exception as e:
         print(f"⚠️ Database connection issue: {e}")
         print("Application will start but database features may not work")
