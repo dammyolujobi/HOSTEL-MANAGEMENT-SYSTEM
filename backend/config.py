@@ -7,12 +7,11 @@ from urllib.parse import quote_plus
 
 load_dotenv()
 
-class Settings(BaseSettings):
-    # Database components
-    DB_HOST: str = "autorack.proxy.rlwy.net"
-    DB_PORT: int = 17685
+class Settings(BaseSettings):    # Database components
+    DB_HOST: str = "hopper.proxy.rlwy.net"
+    DB_PORT: int = 14988
     DB_USER: str = "root" 
-    DB_PASSWORD: str = "mkBGclXpkhFkwAXFdHpFZFKLJnqpONql"
+    DB_PASSWORD: str = "RBSkzqpuAeCGdVankDFOXPbNSlEXybHS"
     DB_NAME: str = "railway"
     DB_CHARSET: str = "utf8mb4"
     DB_CONNECTION_TIMEOUT: int = 60
