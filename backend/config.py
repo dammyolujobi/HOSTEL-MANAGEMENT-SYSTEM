@@ -7,7 +7,8 @@ from urllib.parse import quote_plus
 
 load_dotenv()
 
-class Settings(BaseSettings):    # Database components
+class Settings(BaseSettings):
+    # Database components
     DB_HOST: str = "hopper.proxy.rlwy.net"
     DB_PORT: int = 14988
     DB_USER: str = "root" 
