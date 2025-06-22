@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Building2, Eye, EyeOff, LogIn } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -28,26 +29,14 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // Here you would make an API call to your backend
-      // const response = await apiClient.login(formData)
+      // Make actual API call to your backend
+      const response = await AuthService.login(formData)
 
-      // Simulate API call for now
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // For demo purposes, redirect based on email
-      if (formData.email.includes("student")) {
-        router.push("/dashboard?role=student")
-      } else if (formData.email.includes("officer")) {
-        router.push("/dashboard?role=officer")
-      } else if (formData.email.includes("manager")) {
-        router.push("/dashboard?role=manager")
-      } else if (formData.email.includes("admin")) {
-        router.push("/dashboard?role=admin")
-      } else {
-        router.push("/dashboard?role=student")
-      }
-    } catch (err) {
-      setError("Invalid email or password. Please try again.")
+      // Redirect based on user role from backend response
+      const userRole = response.user.role.toLowerCase()
+      router.push(`/dashboard?role=${userRole}`)
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -56,6 +45,22 @@ export default function LoginPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (error) setError("") // Clear error when user starts typing
+  }
+
+  const handleDemoLogin = async (email: string, password: string) => {
+    setFormData({ email, password })
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await AuthService.login({ email, password })
+      const userRole = response.user.role.toLowerCase()
+      router.push(`/dashboard?role=${userRole}`)
+    } catch (err: any) {
+      setError("Demo account not available. Please contact administrator.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -154,9 +159,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setFormData({ email: "student@demo.com", password: "demo123" })
-                  }}
+                  onClick={() => handleDemoLogin("student@demo.com", "demo123")}
                   disabled={isLoading}
                 >
                   Student Demo
@@ -164,9 +167,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setFormData({ email: "officer@demo.com", password: "demo123" })
-                  }}
+                  onClick={() => handleDemoLogin("officer@demo.com", "demo123")}
                   disabled={isLoading}
                 >
                   Officer Demo
@@ -174,19 +175,15 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setFormData({ email: "manager@demo.com", password: "demo123" })
-                  }}
+                  onClick={() => handleDemoLogin("hall_officer@demo.com", "demo123")}
                   disabled={isLoading}
                 >
-                  Manager Demo
+                  Hall Officer Demo
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    setFormData({ email: "admin@demo.com", password: "demo123" })
-                  }}
+                  onClick={() => handleDemoLogin("admin@demo.com", "demo123")}
                   disabled={isLoading}
                 >
                   Admin Demo

@@ -11,17 +11,20 @@ export interface LoginResponse {
     name: string
     email: string
     role: string
+    phone_number?: string
   }
+  expires_in: number
 }
 
 export class AuthService {
   private static TOKEN_KEY = "hostel_ms_token"
   private static USER_KEY = "hostel_ms_user"
+  private static API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://hostel-management-system-production-5590.up.railway.app/api/v1"
 
   static async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      // This would be your actual login API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,7 +33,19 @@ export class AuthService {
       })
 
       if (!response.ok) {
-        throw new Error("Invalid credentials")
+        if (response.status === 401) {
+          throw new Error("Invalid email or password")
+        } else if (response.status === 422) {
+          throw new Error("Please check your email and password format")
+        } else {
+          // Try to get error details from response
+          try {
+            const errorData = await response.json()
+            throw new Error(errorData.detail || "Login failed. Please try again.")
+          } catch {
+            throw new Error("Login failed. Please try again.")
+          }
+        }
       }
 
       const data: LoginResponse = await response.json()
@@ -41,13 +56,16 @@ export class AuthService {
 
       return data
     } catch (error) {
-      throw new Error("Login failed")
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Network error. Please check your connection.")
     }
   }
 
   static async forgotPassword(email: string): Promise<void> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
+      const response = await fetch(`${this.API_BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,6 +78,39 @@ export class AuthService {
       }
     } catch (error) {
       throw new Error("Failed to send reset email")
+    }
+  }
+
+  static async getCurrentUser(): Promise<any> {
+    const token = this.getToken()
+    if (!token) {
+      throw new Error("No authentication token found")
+    }
+
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/auth/verify`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          this.logout() // Clear invalid token
+          throw new Error("Session expired. Please login again.")
+        }
+        throw new Error("Failed to get user information")
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Network error. Please check your connection.")
     }
   }
 

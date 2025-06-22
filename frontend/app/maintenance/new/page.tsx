@@ -2,47 +2,114 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Building2, ArrowLeft, Send } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Building2, ArrowLeft, Send, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
+import { apiClient } from "@/lib/api"
 
-const categories = [
-  { id: 1, name: "Plumbing", description: "Water, drainage, and pipe issues" },
-  { id: 2, name: "Electrical", description: "Lighting, outlets, and electrical problems" },
-  { id: 3, name: "HVAC", description: "Heating, ventilation, and air conditioning" },
-  { id: 4, name: "Furniture", description: "Bed, desk, chair, and furniture repairs" },
-  { id: 5, name: "Cleaning", description: "Deep cleaning and sanitation requests" },
-  { id: 6, name: "Security", description: "Locks, keys, and security-related issues" },
-  { id: 7, name: "Other", description: "Other maintenance needs" },
-]
+interface Category {
+  category_ID: number
+  category_name: string
+  description: string
+}
 
 export default function NewMaintenanceRequestPage() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    category: "",
+    category_ID: "",
     description: "",
     availability: "",
   })
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(false)
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  const [error, setError] = useState("")
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const user = AuthService.getUser()
+    if (!user) {
+      router.push("/login")
+      return
+    }
+    setCurrentUser(user)
+    loadCategories()
+  }, [router])
+
+  const loadCategories = async () => {
+    try {
+      // Since categories aren't in your API yet, we'll use static data
+      // In production, you'd fetch from: await apiClient.getCategories()
+      const staticCategories = [
+        { category_ID: 1, category_name: "Plumbing", description: "Water, drainage, and pipe issues" },
+        { category_ID: 2, category_name: "Electrical", description: "Lighting, outlets, and electrical problems" },
+        { category_ID: 3, category_name: "HVAC", description: "Heating, ventilation, and air conditioning" },
+        { category_ID: 4, category_name: "Furniture", description: "Bed, desk, chair, and furniture repairs" },
+        { category_ID: 5, category_name: "Cleaning", description: "Deep cleaning and sanitation requests" },
+        { category_ID: 6, category_name: "Security", description: "Locks, keys, and security-related issues" },
+        { category_ID: 7, category_name: "Other", description: "Other maintenance needs" },
+      ]
+      setCategories(staticCategories)
+    } catch (err: any) {
+      setError("Failed to load categories")
+    } finally {
+      setLoadingCategories(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Here you would typically send the data to your API
-    console.log("Submitting maintenance request:", formData)
+    setLoading(true)
+    setError("")
 
-    // Simulate API call
-    setTimeout(() => {
-      router.push("/dashboard?role=student")
-    }, 1000)
+    try {
+      if (!currentUser) {
+        throw new Error("User not authenticated")
+      }
+
+      // Create maintenance request
+      const requestData = {
+        student_ID: currentUser.id, // This should be the student ID from your database
+        room_ID: 1, // This should come from the user's room assignment
+        category_ID: Number.parseInt(formData.category_ID),
+        description: formData.description,
+        availability: formData.availability || null,
+        status_ID: 1, // Default to "Pending" status
+      }
+
+      await apiClient.createMaintenanceRequest(requestData)
+
+      // Redirect to dashboard with success message
+      router.push(`/dashboard?role=${currentUser.role}&success=request_created`)
+    } catch (err: any) {
+      setError(err.message || "Failed to submit maintenance request. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    if (error) setError("") // Clear error when user starts typing
+  }
+
+  if (loadingCategories) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading form...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -85,17 +152,27 @@ export default function NewMaintenanceRequestPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="category">Category *</Label>
-                    <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                    <Select
+                      value={formData.category_ID}
+                      onValueChange={(value) => handleInputChange("category_ID", value)}
+                      disabled={loading}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.name}>
+                          <SelectItem key={category.category_ID} value={category.category_ID.toString()}>
                             <div>
-                              <div className="font-medium">{category.name}</div>
+                              <div className="font-medium">{category.category_name}</div>
                               <div className="text-sm text-muted-foreground">{category.description}</div>
                             </div>
                           </SelectItem>
@@ -113,6 +190,7 @@ export default function NewMaintenanceRequestPage() {
                       onChange={(e) => handleInputChange("description", e.target.value)}
                       rows={4}
                       required
+                      disabled={loading}
                     />
                   </div>
 
@@ -124,15 +202,25 @@ export default function NewMaintenanceRequestPage() {
                       value={formData.availability}
                       onChange={(e) => handleInputChange("availability", e.target.value)}
                       rows={3}
+                      disabled={loading}
                     />
                   </div>
 
                   <div className="flex space-x-4">
-                    <Button type="submit" className="flex-1">
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit Request
+                    <Button type="submit" className="flex-1" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Submit Request
+                        </>
+                      )}
                     </Button>
-                    <Button type="button" variant="outline" asChild>
+                    <Button type="button" variant="outline" asChild disabled={loading}>
                       <Link href="/dashboard?role=student">Cancel</Link>
                     </Button>
                   </div>
@@ -150,19 +238,15 @@ export default function NewMaintenanceRequestPage() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium">Name</Label>
-                  <p className="text-sm text-muted-foreground">John Doe</p>
+                  <p className="text-sm text-muted-foreground">{currentUser?.name || "Loading..."}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Room</Label>
-                  <p className="text-sm text-muted-foreground">A-101</p>
+                  <Label className="text-sm font-medium">Email</Label>
+                  <p className="text-sm text-muted-foreground">{currentUser?.email || "Loading..."}</p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Hall</Label>
-                  <p className="text-sm text-muted-foreground">North Hall</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Contact</Label>
-                  <p className="text-sm text-muted-foreground">john.doe@university.edu</p>
+                  <Label className="text-sm font-medium">Role</Label>
+                  <p className="text-sm text-muted-foreground capitalize">{currentUser?.role || "Loading..."}</p>
                 </div>
               </CardContent>
             </Card>

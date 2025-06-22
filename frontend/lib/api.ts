@@ -1,12 +1,14 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://hostel-management-system-production-5590.up.railway.app/api/v1"
 
+import { AuthService } from "./auth"
+
 export interface User {
   id: number
   name: string
   email: string
   phone_number?: string
-  role: "student" | "officer" | "manager" | "admin"
+  role: "student" | "officer" | "hall_officer" | "admin" // Updated role types
   created_at: string
   updated_at: string
 }
@@ -24,6 +26,10 @@ export interface MaintenanceRequest {
   completion_timestamp?: string
   estimated_cost?: number
   actual_cost?: number
+  student?: any
+  room?: any
+  category?: any
+  status?: any
 }
 
 export interface ApiResponse<T> {
@@ -44,6 +50,7 @@ class ApiClient {
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
+        ...AuthService.getAuthHeaders(), // Add authentication headers
         ...options.headers,
       },
       ...options,
@@ -53,7 +60,22 @@ class ApiClient {
       const response = await fetch(url, config)
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        if (response.status === 401) {
+          AuthService.logout()
+          window.location.href = "/login"
+          throw new Error("Session expired. Please login again.")
+        }
+
+        // Try to get error message from response
+        let errorMessage = `HTTP error! status: ${response.status}`
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.detail || errorData.message || errorMessage
+        } catch {
+          // If we can't parse the error response, use the default message
+        }
+
+        throw new Error(errorMessage)
       }
 
       return await response.json()
@@ -161,7 +183,7 @@ export const apiClient = new ApiClient(API_BASE_URL)
 export const userHelpers = {
   getStudents: () => apiClient.getUsers({ role: "student" }),
   getOfficers: () => apiClient.getUsers({ role: "officer" }),
-  getManagers: () => apiClient.getUsers({ role: "manager" }),
+  getHallOfficers: () => apiClient.getUsers({ role: "hall_officer" }), // Updated
   getAdmins: () => apiClient.getUsers({ role: "admin" }),
 }
 

@@ -1,16 +1,60 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Building2, Users, Wrench, BarChart3, LogIn } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
 
 export default function HomePage() {
+  const router = useRouter()
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await AuthService.login(loginForm)
+      const userRole = response.user.role.toLowerCase()
+      router.push(`/dashboard?role=${userRole}`)
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDemoAccess = async (role: string) => {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      // Try to login with demo credentials
+      const demoCredentials = {
+        email: `${role}@demo.com`,
+        password: "demo123",
+      }
+
+      const response = await AuthService.login(demoCredentials)
+      const userRole = response.user.role.toLowerCase()
+      router.push(`/dashboard?role=${userRole}`)
+    } catch (err: any) {
+      setError("Demo account not available. Please use the login form.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -55,57 +99,93 @@ export default function HomePage() {
                   </TabsList>
 
                   <TabsContent value="login" className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
-                        value={loginForm.email}
-                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Enter your password"
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      />
-                    </div>
-                    <Button className="w-full" asChild>
-                      <Link href="/dashboard">Sign In</Link>
-                    </Button>
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={loginForm.email}
+                          onChange={(e) => {
+                            setLoginForm({ ...loginForm, email: e.target.value })
+                            if (error) setError("")
+                          }}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="Enter your password"
+                          value={loginForm.password}
+                          onChange={(e) => {
+                            setLoginForm({ ...loginForm, password: e.target.value })
+                            if (error) setError("")
+                          }}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </form>
                   </TabsContent>
 
                   <TabsContent value="demo" className="space-y-4">
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
                     <p className="text-sm text-gray-600">Try our system with demo credentials:</p>
                     <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start" asChild>
-                        <Link href="/dashboard?role=student">
-                          <Users className="h-4 w-4 mr-2" />
-                          Student Dashboard
-                        </Link>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleDemoAccess("student")}
+                        disabled={isLoading}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Student Dashboard
                       </Button>
-                      <Button variant="outline" className="w-full justify-start" asChild>
-                        <Link href="/dashboard?role=officer">
-                          <Wrench className="h-4 w-4 mr-2" />
-                          Maintenance Officer
-                        </Link>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleDemoAccess("officer")}
+                        disabled={isLoading}
+                      >
+                        <Wrench className="h-4 w-4 mr-2" />
+                        Maintenance Officer
                       </Button>
-                      <Button variant="outline" className="w-full justify-start" asChild>
-                        <Link href="/dashboard?role=manager">
-                          <Building2 className="h-4 w-4 mr-2" />
-                          Hall Officer
-                        </Link>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleDemoAccess("hall_officer")}
+                        disabled={isLoading}
+                      >
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Hall Officer
                       </Button>
-                      <Button variant="outline" className="w-full justify-start" asChild>
-                        <Link href="/dashboard?role=admin">
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          Administrator
-                        </Link>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleDemoAccess("admin")}
+                        disabled={isLoading}
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Administrator
                       </Button>
                     </div>
                   </TabsContent>
@@ -132,7 +212,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Manage students, officers, managers, and administrators with role-based access control.
+                  Manage students, officers, hall officers, and administrators with role-based access control.
                 </p>
               </CardContent>
             </Card>
