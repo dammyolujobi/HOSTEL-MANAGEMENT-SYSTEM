@@ -32,13 +32,16 @@ class Settings(BaseSettings):
     DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
     APP_NAME: str = os.getenv("APP_NAME", "Hostel Management System API")
     VERSION: str = os.getenv("VERSION", "1.0.0")
-    PORT: int = int(os.getenv("PORT", "8000"))
-    
+    PORT: int = int(os.getenv("PORT", "8000"))    
     @property
     def DATABASE_URL(self) -> str:
         # URL encode the password to handle special characters
         encoded_password = quote_plus(self.DB_PASSWORD)
-        return f"mysql+mysqlconnector://{self.DB_USER}:{encoded_password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        # For Railway, add SSL mode for secure connections
+        ssl_params = ""
+        if "railway" in self.DB_HOST.lower() or "rlwy" in self.DB_HOST.lower():
+            ssl_params = "?ssl_disabled=false&charset=utf8mb4"
+        return f"mysql+mysqlconnector://{self.DB_USER}:{encoded_password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}{ssl_params}"
 
     class Config:
         env_file = ".env"
