@@ -8,7 +8,16 @@ engine = create_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
     pool_pre_ping=True,
-    pool_recycle=300
+    pool_recycle=300,
+    pool_timeout=30,
+    max_overflow=0,
+    connect_args={
+        "connect_timeout": 60,
+        "read_timeout": 60,
+        "write_timeout": 60,
+        "ssl_disabled": True,
+        "autocommit": True
+    }
 )
 
 # Create SessionLocal class
