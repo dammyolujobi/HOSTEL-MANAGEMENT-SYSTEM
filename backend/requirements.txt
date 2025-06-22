@@ -1,17 +1,13 @@
-# FastAPI and web server dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-
-# Database dependencies
-SQLAlchemy==2.0.23
-mysql-connector-python==8.2.0
-
-# Authentication and security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-decouple==3.8
-
-# Additional utilities
-pydantic==2.5.0
-python-dotenv==1.0.0
+fastapi
+uvicorn[standard]
+gunicorn
+sqlalchemy
+mysql-connector-python
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+email-validator
+python-dotenv
+jwt
