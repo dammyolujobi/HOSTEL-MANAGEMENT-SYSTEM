@@ -6,6 +6,21 @@ from models.models import UserRole, RoomType,AdminLevel, ActionType
 import bcrypt
 
 
+# Authentication schemas
+class LoginCredentials(BaseModel):
+    email: EmailStr
+    password: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
+    expires_in: int
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+
 # Base schemas
 class UserBase(BaseModel):
     name: str

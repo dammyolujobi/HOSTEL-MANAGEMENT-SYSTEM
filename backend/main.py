@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database.database import engine, Base
-from api.routes import users, maintenance_requests
+from api.routes import users, maintenance_requests, auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -21,6 +21,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(maintenance_requests.router, prefix="/api/v1")
 
