@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from datetime import datetime, timedelta
 from typing import Optional
-import jwt
+from jose import JWTError, jwt
 import bcrypt
 import os
 from dotenv import load_dotenv
@@ -104,8 +104,8 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        token_data = TokenData(email=email)
-    except jwt.PyJWTError:
+        token_data = TokenData(email=email)    
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",
