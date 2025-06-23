@@ -159,7 +159,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("student@demo.com", "demo123")}
+                  onClick={() => handleDemoLogin("john.doe@stu.cu.edu.ng", "student123")}
                   disabled={isLoading}
                 >
                   Student Demo
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("officer@demo.com", "demo123")}
+                  onClick={() => handleDemoLogin("maintenance@cu.edu.ng", "officer123")}
                   disabled={isLoading}
                 >
                   Officer Demo
@@ -175,7 +175,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("hall_officer@demo.com", "demo123")}
+                  onClick={() => handleDemoLogin("hall.officer@cu.edu.ng", "officer123")}
                   disabled={isLoading}
                 >
                   Hall Officer Demo
@@ -183,7 +183,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("admin@demo.com", "demo123")}
+                  onClick={() => handleDemoLogin("admin@cu.edu.ng", "admin123")}
                   disabled={isLoading}
                 >
                   Admin Demo

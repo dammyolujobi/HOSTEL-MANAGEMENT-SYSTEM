@@ -1,5 +1,17 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://hostel-management-system-production-5590.up.railway.app/api/v1"
+// Environment-aware API configuration
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL
+  }
+  
+  // Default to production if no environment variable is set
+  return "https://hostel-management-system-production-cc97.up.railway.app"
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+// Log the current API URL for debugging
+console.log("🔗 API Base URL:", API_BASE_URL)
 
 import { AuthService } from "./auth"
 
@@ -8,7 +20,7 @@ export interface User {
   name: string
   email: string
   phone_number?: string
-  role: "student" | "officer" | "hall_officer" | "admin" // Updated role types
+  role: "student" | "officer" | "hall_officer" | "admin"
   created_at: string
   updated_at: string
 }
@@ -32,25 +44,31 @@ export interface MaintenanceRequest {
   status?: any
 }
 
-export interface ApiResponse<T> {
-  data: T
-  message?: string
-}
-
 class ApiClient {
   private baseURL: string
 
   constructor(baseURL: string) {
-    this.baseURL = baseURL
+    this.baseURL = baseURL.replace(/\/$/, "")
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`
+    // Always ensure we have the full /api/v1 prefix
+    const fullEndpoint = endpoint.startsWith("/api/v1") ? endpoint : `/api/v1${endpoint}`
+    
+    // Add trailing slash for POST requests to avoid 307 redirects
+    let finalEndpoint = fullEndpoint
+    if (options.method === "POST" && !finalEndpoint.endsWith("/")) {
+      finalEndpoint += "/"
+    }
+    
+    const url = `${this.baseURL}${finalEndpoint}`
+
+    console.log("🌐 Making API request to:", url) // Debug log
 
     const config: RequestInit = {
       headers: {
         "Content-Type": "application/json",
-        ...AuthService.getAuthHeaders(), // Add authentication headers
+        ...AuthService.getAuthHeaders(),
         ...options.headers,
       },
       ...options,
@@ -66,7 +84,6 @@ class ApiClient {
           throw new Error("Session expired. Please login again.")
         }
 
-        // Try to get error message from response
         let errorMessage = `HTTP error! status: ${response.status}`
         try {
           const errorData = await response.json()
@@ -85,7 +102,7 @@ class ApiClient {
     }
   }
 
-  // User endpoints
+  // User endpoints - All with /api/v1 prefix
   async getUsers(params?: { skip?: number; limit?: number; role?: string }): Promise<User[]> {
     const searchParams = new URLSearchParams()
     if (params?.skip) searchParams.append("skip", params.skip.toString())
@@ -120,7 +137,7 @@ class ApiClient {
     })
   }
 
-  // Maintenance Request endpoints
+  // Maintenance Request endpoints - All with /api/v1 prefix
   async getMaintenanceRequests(params?: {
     skip?: number
     limit?: number
@@ -183,7 +200,7 @@ export const apiClient = new ApiClient(API_BASE_URL)
 export const userHelpers = {
   getStudents: () => apiClient.getUsers({ role: "student" }),
   getOfficers: () => apiClient.getUsers({ role: "officer" }),
-  getHallOfficers: () => apiClient.getUsers({ role: "hall_officer" }), // Updated
+  getHallOfficers: () => apiClient.getUsers({ role: "hall_officer" }),
   getAdmins: () => apiClient.getUsers({ role: "admin" }),
 }
 

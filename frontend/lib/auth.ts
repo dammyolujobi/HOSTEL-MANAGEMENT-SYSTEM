@@ -19,36 +19,57 @@ export interface LoginResponse {
 export class AuthService {
   private static TOKEN_KEY = "hostel_ms_token"
   private static USER_KEY = "hostel_ms_user"
-  private static API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "https://hostel-management-system-production-5590.up.railway.app/api/v1"
+  
+  // Environment-aware API URL configuration
+  private static getApiBaseUrl() {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL
+    }
+    
+    // Default to production if no environment variable is set
+    return "https://hostel-management-system-production-cc97.up.railway.app"
+  }
+  
+  private static API_BASE_URL = AuthService.getApiBaseUrl()
 
   static async login(credentials: LoginCredentials): Promise<LoginResponse> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
+      console.log("🔐 Attempting login with:", credentials.email)
+      console.log("🌐 API URL:", `${this.API_BASE_URL}/api/v1/auth/login`)
+
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/login/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify(credentials),
       })
+
+      console.log("📡 Response status:", response.status)
 
       if (!response.ok) {
         if (response.status === 401) {
           throw new Error("Invalid email or password")
         } else if (response.status === 422) {
+          const errorData = await response.json()
+          console.error("❌ Validation error:", errorData)
           throw new Error("Please check your email and password format")
+        } else if (response.status === 0) {
+          throw new Error("Cannot connect to server. CORS error detected.")
         } else {
-          // Try to get error details from response
           try {
             const errorData = await response.json()
-            throw new Error(errorData.detail || "Login failed. Please try again.")
+            console.error("❌ Server error:", errorData)
+            throw new Error(errorData.detail || `Server error: ${response.status}`)
           } catch {
-            throw new Error("Login failed. Please try again.")
+            throw new Error(`Server error: ${response.status}. Please try again.`)
           }
         }
       }
 
       const data: LoginResponse = await response.json()
+      console.log("✅ Login successful:", data.user)
 
       // Store token and user data
       this.setToken(data.access_token)
@@ -56,16 +77,49 @@ export class AuthService {
 
       return data
     } catch (error) {
+      console.error("🚨 Login error:", error)
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error("CORS error: Cannot connect to backend. Please check server configuration.")
+      }
       if (error instanceof Error) {
         throw error
       }
-      throw new Error("Network error. Please check your connection.")
+      throw new Error("Network error. Please check your connection and try again.")
+    }
+  }
+
+  static async testConnection(): Promise<{ connected: boolean; message: string }> {
+    try {
+      console.log("🧪 Testing API connection...")
+      const healthUrl = `${this.API_BASE_URL}/health`
+
+      const response = await fetch(healthUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      })
+
+      console.log("🏥 Health check status:", response.status)
+
+      if (response.ok) {
+        const data = await response.json()
+        return { connected: true, message: "Connected successfully" }
+      } else {
+        return { connected: false, message: `Server responded with status ${response.status}` }
+      }
+    } catch (error) {
+      console.error("🚨 Connection test failed:", error)
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        return { connected: false, message: "CORS error: Cannot reach server" }
+      }
+      return { connected: false, message: "Connection failed" }
     }
   }
 
   static async forgotPassword(email: string): Promise<void> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/forgot-password`, {
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/forgot-password/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,7 +142,7 @@ export class AuthService {
     }
 
     try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/verify`, {
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/verify`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,7 +152,7 @@ export class AuthService {
 
       if (!response.ok) {
         if (response.status === 401) {
-          this.logout() // Clear invalid token
+          this.logout()
           throw new Error("Session expired. Please login again.")
         }
         throw new Error("Failed to get user information")

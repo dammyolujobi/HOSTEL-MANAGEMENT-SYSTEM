@@ -2,14 +2,14 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Building2, Users, Wrench, BarChart3, LogIn } from "lucide-react"
+import { Building2, Users, Wrench, BarChart3, LogIn, Wifi, WifiOff, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 
@@ -18,6 +18,22 @@ export default function HomePage() {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [connectionStatus, setConnectionStatus] = useState<{
+    status: "checking" | "connected" | "disconnected"
+    message: string
+  }>({ status: "checking", message: "Checking connection..." })
+
+  useEffect(() => {
+    // Test API connection on page load
+    const testConnection = async () => {
+      const result = await AuthService.testConnection()
+      setConnectionStatus({
+        status: result.connected ? "connected" : "disconnected",
+        message: result.message,
+      })
+    }
+    testConnection()
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,20 +56,38 @@ export default function HomePage() {
     setError("")
 
     try {
-      // Try to login with demo credentials
+      // Use the correct demo credentials from your backend
       const demoCredentials = {
-        email: `${role}@demo.com`,
-        password: "demo123",
+        student: { email: "john.doe@stu.cu.edu.ng", password: "student123" },
+        officer: { email: "maintenance@cu.edu.ng", password: "officer123" },
+        hall_officer: { email: "hall.officer@cu.edu.ng", password: "officer123" },
+        admin: { email: "admin@cu.edu.ng", password: "admin123" },
       }
 
-      const response = await AuthService.login(demoCredentials)
+      const credentials = demoCredentials[role as keyof typeof demoCredentials]
+      if (!credentials) {
+        throw new Error("Invalid role")
+      }
+
+      console.log(`🎭 Trying ${role} demo with:`, credentials.email)
+      const response = await AuthService.login(credentials)
       const userRole = response.user.role.toLowerCase()
       router.push(`/dashboard?role=${userRole}`)
     } catch (err: any) {
-      setError("Demo account not available. Please use the login form.")
+      console.error(`❌ ${role} demo failed:`, err)
+      setError(err.message || "Demo account not available. Please try again.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const retryConnection = async () => {
+    setConnectionStatus({ status: "checking", message: "Retrying connection..." })
+    const result = await AuthService.testConnection()
+    setConnectionStatus({
+      status: result.connected ? "connected" : "disconnected",
+      message: result.message,
+    })
   }
 
   return (
@@ -65,6 +99,28 @@ export default function HomePage() {
             <div className="flex items-center space-x-2">
               <Building2 className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">HostelMS</h1>
+            </div>
+
+            {/* Connection Status */}
+            <div className="flex items-center space-x-2">
+              {connectionStatus.status === "checking" && (
+                <div className="flex items-center space-x-1 text-yellow-600">
+                  <Wifi className="h-4 w-4 animate-pulse" />
+                  <span className="text-sm">Checking...</span>
+                </div>
+              )}
+              {connectionStatus.status === "connected" && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Wifi className="h-4 w-4" />
+                  <span className="text-sm">Connected</span>
+                </div>
+              )}
+              {connectionStatus.status === "disconnected" && (
+                <div className="flex items-center space-x-1 text-red-600 cursor-pointer" onClick={retryConnection}>
+                  <WifiOff className="h-4 w-4" />
+                  <span className="text-sm">Retry</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -92,11 +148,92 @@ export default function HomePage() {
                 <CardDescription>Access your hostel management dashboard</CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="login" className="w-full">
+                {connectionStatus.status === "disconnected" && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-2">
+                        <p>
+                          <strong>CORS Error:</strong> {connectionStatus.message}
+                        </p>
+                        <p className="text-sm">
+                          The backend needs to allow requests from this domain. Please update your backend CORS settings
+                          to include:
+                        </p>
+                        <code className="text-xs bg-gray-100 p-1 rounded">
+                          https://v0-frontend-build-with-next-js.vercel.app
+                        </code>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Tabs defaultValue="demo" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="demo">Demo Access</TabsTrigger>
                     <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="demo">Demo</TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="demo" className="space-y-4">
+                    {error && (
+                      <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    <p className="text-sm text-gray-600">Try our system with demo credentials:</p>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left"
+                        onClick={() => handleDemoAccess("student")}
+                        disabled={isLoading || connectionStatus.status === "disconnected"}
+                      >
+                        <div className="flex items-center">
+                          <Users className="h-4 w-4 mr-2" />
+                          Student Dashboard
+                        </div>
+                        <span className="text-xs text-gray-500">john.doe@stu.cu.edu.ng</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left"
+                        onClick={() => handleDemoAccess("officer")}
+                        disabled={isLoading || connectionStatus.status === "disconnected"}
+                      >
+                        <div className="flex items-center">
+                          <Wrench className="h-4 w-4 mr-2" />
+                          Maintenance Officer
+                        </div>
+                        <span className="text-xs text-gray-500">maintenance@cu.edu.ng</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left"
+                        onClick={() => handleDemoAccess("hall_officer")}
+                        disabled={isLoading || connectionStatus.status === "disconnected"}
+                      >
+                        <div className="flex items-center">
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Hall Officer
+                        </div>
+                        <span className="text-xs text-gray-500">hall.officer@cu.edu.ng</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-between text-left"
+                        onClick={() => handleDemoAccess("admin")}
+                        disabled={isLoading || connectionStatus.status === "disconnected"}
+                      >
+                        <div className="flex items-center">
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          Administrator
+                        </div>
+                        <span className="text-xs text-gray-500">admin@cu.edu.ng</span>
+                      </Button>
+                    </div>
+                    {isLoading && <p className="text-sm text-center text-gray-500">Connecting to backend...</p>}
+                  </TabsContent>
 
                   <TabsContent value="login" className="space-y-4">
                     {error && (
@@ -118,7 +255,7 @@ export default function HomePage() {
                             if (error) setError("")
                           }}
                           required
-                          disabled={isLoading}
+                          disabled={isLoading || connectionStatus.status === "disconnected"}
                         />
                       </div>
                       <div className="space-y-2">
@@ -133,63 +270,32 @@ export default function HomePage() {
                             if (error) setError("")
                           }}
                           required
-                          disabled={isLoading}
+                          disabled={isLoading || connectionStatus.status === "disconnected"}
                         />
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoading}>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={isLoading || connectionStatus.status === "disconnected"}
+                      >
                         {isLoading ? "Signing in..." : "Sign In"}
                       </Button>
                     </form>
                   </TabsContent>
-
-                  <TabsContent value="demo" className="space-y-4">
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-
-                    <p className="text-sm text-gray-600">Try our system with demo credentials:</p>
-                    <div className="space-y-2">
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleDemoAccess("student")}
-                        disabled={isLoading}
-                      >
-                        <Users className="h-4 w-4 mr-2" />
-                        Student Dashboard
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleDemoAccess("officer")}
-                        disabled={isLoading}
-                      >
-                        <Wrench className="h-4 w-4 mr-2" />
-                        Maintenance Officer
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleDemoAccess("hall_officer")}
-                        disabled={isLoading}
-                      >
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Hall Officer
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start"
-                        onClick={() => handleDemoAccess("admin")}
-                        disabled={isLoading}
-                      >
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Administrator
-                      </Button>
-                    </div>
-                  </TabsContent>
                 </Tabs>
+
+                {/* Debug Info */}
+                <div className="mt-4 p-3 bg-gray-50 rounded text-xs">
+                  <p>
+                    <strong>Backend URL:</strong> https://hostel-management-system-production-cc97.up.railway.app
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {connectionStatus.message}
+                  </p>
+                  <p>
+                    <strong>Frontend URL:</strong> https://v0-frontend-build-with-next-js.vercel.app
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>

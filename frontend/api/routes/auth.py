@@ -9,7 +9,7 @@ import bcrypt
 import os
 from dotenv import load_dotenv
 
-from backend.database.database import get_db
+from database.database import get_db
 from models.models import User
 from schemas.schemas import LoginCredentials, LoginResponse, TokenData
 
