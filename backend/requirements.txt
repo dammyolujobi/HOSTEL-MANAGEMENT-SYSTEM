@@ -10,4 +10,3 @@ passlib[bcrypt]
 python-multipart
 email-validator
 python-dotenv
-python-jose
