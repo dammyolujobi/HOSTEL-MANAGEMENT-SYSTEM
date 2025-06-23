@@ -3,6 +3,8 @@ uvicorn[standard]
 gunicorn
 sqlalchemy
 mysql-connector-python
+pymysql
+cryptography
 pydantic
 pydantic-settings
 python-jose[cryptography]
@@ -10,3 +12,4 @@ passlib[bcrypt]
 python-multipart
 email-validator
 python-dotenv
+bcrypt

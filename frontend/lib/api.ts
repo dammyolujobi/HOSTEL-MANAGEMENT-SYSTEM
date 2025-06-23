@@ -155,7 +155,7 @@ class ApiClient {
     if (params?.category_id) searchParams.append("category_id", params.category_id.toString())
 
     const query = searchParams.toString()
-    return this.request<MaintenanceRequest[]>(`/maintenance-requests${query ? `?${query}` : ""}`)
+    return this.request<MaintenanceRequest[]>(`/maintenance-requests/${query ? `?${query}` : ""}`)
   }
 
   async getMaintenanceRequest(requestId: number): Promise<MaintenanceRequest> {
@@ -165,7 +165,7 @@ class ApiClient {
   async createMaintenanceRequest(
     requestData: Omit<MaintenanceRequest, "issue_ID" | "submission_timestamp" | "last_updated">,
   ): Promise<MaintenanceRequest> {
-    return this.request<MaintenanceRequest>("/maintenance-requests", {
+    return this.request<MaintenanceRequest>("/maintenance-requests/", {
       method: "POST",
       body: JSON.stringify(requestData),
     })
@@ -188,11 +188,11 @@ class ApiClient {
   }
 
   async getActiveRequests(): Promise<MaintenanceRequest[]> {
-    return this.request<MaintenanceRequest[]>("/maintenance-requests/active")
+    return this.request<MaintenanceRequest[]>("/maintenance-requests/active/")
   }
 
   async getRequestsByHall(hallId: number): Promise<MaintenanceRequest[]> {
-    return this.request<MaintenanceRequest[]>(`/maintenance-requests/hall/${hallId}`)
+    return this.request<MaintenanceRequest[]>(`/maintenance-requests/hall/${hallId}/`)
   }
 }
 
