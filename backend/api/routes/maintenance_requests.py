@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database.database import get_db
@@ -13,6 +14,20 @@ from crud.maintenance_request_crud import (
 
 
 router = APIRouter(prefix="/maintenance-requests", tags=["maintenance-requests"])
+
+# Explicit OPTIONS handler for debugging
+@router.options("/")
+@router.options("")
+async def options_handler():
+    """Handle OPTIONS requests for CORS preflight"""
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 @router.get("/", response_model=List[MaintenanceRequest])
 def read_maintenance_requests(

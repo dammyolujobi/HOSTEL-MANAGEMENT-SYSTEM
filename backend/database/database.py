@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import DisconnectionError, OperationalError, SQLAlchemyError
@@ -94,7 +94,7 @@ def get_db():
     db = SessionLocal()
     try:
         # Test the connection
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         yield db
     except (DisconnectionError, OperationalError) as e:
         logger.error(f"Database connection error: {e}")
@@ -107,7 +107,7 @@ def get_db():
             try:
                 time.sleep(2 ** attempt)  # 0, 2, 4 seconds
                 db = SessionLocal()
-                db.execute("SELECT 1")
+                db.execute(text("SELECT 1"))
                 logger.info(f"Database reconnected on attempt {attempt + 1}")
                 yield db
                 break
@@ -135,7 +135,7 @@ def check_database_health():
     """Check if database is accessible"""
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         return True
     except Exception as e:

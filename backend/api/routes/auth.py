@@ -58,7 +58,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against its hash"""
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    try:
+        # Check if the stored password is already hashed (starts with $2b$)
+        if not hashed_password.startswith('$2b$'):
+            # If it's not hashed, it's a plain text password (for demo/testing)
+            return plain_password == hashed_password
+        
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Password verification failed: {e}")
+        return False
 
 def hash_password(password: str) -> str:
     """Hash a password"""

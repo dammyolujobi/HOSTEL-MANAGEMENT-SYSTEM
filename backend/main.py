@@ -25,10 +25,19 @@ app = FastAPI(
 )
 
 # Configure CORS with environment-specific origins
+logger.info(f"🌐 CORS Origins: {settings.ALLOWED_ORIGINS_LIST}")
+logger.info(f"🌍 Environment: {settings.ENVIRONMENT}")
+
+# For local development, allow all origins to debug CORS issues
+cors_origins = settings.ALLOWED_ORIGINS_LIST
+if settings.ENVIRONMENT == "local":
+    cors_origins = ["*"]  # Allow all origins for local development
+    logger.info("🔓 CORS: Allowing all origins for local development")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS_LIST,
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=True if settings.ENVIRONMENT != "local" else False,  # Can't use credentials with wildcard
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
