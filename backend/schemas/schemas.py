@@ -119,14 +119,14 @@ class HallOfficer(HallOfficerBase):
 # Hall schemas
 class HallBase(BaseModel):
     hall_name: str
-    officer_ID: int
+    manager_ID: int
 
 class HallCreate(HallBase):
     pass
 
 class HallUpdate(BaseModel):
     hall_name: Optional[str] = None
-    officer_ID: Optional[int] = None
+    manager_ID: Optional[int] = None
 
 class Hall(HallBase):
     hall_ID: int

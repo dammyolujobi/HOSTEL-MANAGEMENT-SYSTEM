@@ -104,7 +104,7 @@ class Hall(Base):
     
     hall_ID = Column(Integer, primary_key=True, autoincrement=True)
     hall_name = Column(String(100), nullable=False)
-    officer_ID = Column(Integer, ForeignKey("Hall_Officer.manager_ID", ondelete="RESTRICT"), nullable=False)
+    manager_ID = Column(Integer, ForeignKey("Hall_Officer.manager_ID", ondelete="RESTRICT"), nullable=False)
     created_at = Column(DateTime, default=func.current_timestamp())
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     

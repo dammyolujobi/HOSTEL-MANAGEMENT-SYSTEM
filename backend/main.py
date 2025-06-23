@@ -12,16 +12,14 @@ app = FastAPI(
 
 # Configure CORS
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+    CORSMiddleware,    allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://v0-frontend-build-with-next-js.vercel.app",  # Your frontend URL
         "https://*.vercel.app",
         "https://vercel.app",
         "https://*.railway.app",
-        "https://*.up.railway.app",
-        "*"  # Temporary - remove in production
+        "https://*.up.railway.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
