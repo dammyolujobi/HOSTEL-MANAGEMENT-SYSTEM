@@ -12,6 +12,8 @@ export interface LoginResponse {
     email: string
     role: string
     phone_number?: string
+    student_ID?: number  // Only present for students
+    room_ID?: number     // Only present for students
   }
   expires_in: number
 }

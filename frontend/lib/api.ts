@@ -23,6 +23,8 @@ export interface User {
   role: "student" | "officer" | "hall_officer" | "admin"
   created_at: string
   updated_at: string
+  student_ID?: number  // Only present for students
+  room_ID?: number     // Only present for students
 }
 
 export interface MaintenanceRequest {

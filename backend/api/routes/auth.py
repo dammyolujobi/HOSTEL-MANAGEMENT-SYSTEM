@@ -23,14 +23,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here-please-change-in-prod
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Default Covenant University credentials
+# Default Covenant University credentials - redirects to real accounts
 DEFAULT_CREDENTIALS = {
-    "student": {
-        "email": "john.doe@stu.cu.edu.ng",
-        "password": "student123",
-        "name": "John Doe",
-        "role": "student"
-    },
     "admin": {
         "email": "admin@cu.edu.ng", 
         "password": "admin123",
@@ -72,26 +66,23 @@ def hash_password(password: str) -> str:
 
 def authenticate_user(db: Session, email: str, password: str):
     """Authenticate a user with email and password"""
-    # First check default credentials for demo
+    # Check database first for real users
+    user = db.query(User).filter(User.email == email).first()
+    if user and verify_password(password, user.password):
+        return user
+    
+    # Fallback to default credentials only for non-student roles
     for role, creds in DEFAULT_CREDENTIALS.items():
         if creds["email"] == email and creds["password"] == password:
             return {
-                "id": 0,  # Demo user ID
+                "id": 0,  # Demo user ID for non-students only
                 "email": creds["email"],
                 "name": creds["name"],
                 "role": creds["role"],
                 "phone_number": None
             }
     
-    # Then check database
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return None
-    
-    if not verify_password(password, user.password):
-        return None
-    
-    return user
+    return None
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify JWT token"""
@@ -116,13 +107,15 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 @router.post("/login", response_model=LoginResponse)
 async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
     """
-    Login endpoint that accepts Covenant University email format.
+    Login endpoint that accepts university email format.
     
-    Default demo credentials:
-    - Student: john.doe@stu.cu.edu.ng / student123
+    Available demo credentials:
+    - Student: jane.student@university.edu / student123
     - Admin: admin@cu.edu.ng / admin123  
     - Hall Officer: hall.officer@cu.edu.ng / manager123
     - Maintenance Officer: maintenance@cu.edu.ng / officer123
+    
+    For maintenance requests, use the student account which has proper student_ID.
     """
     
     # Authenticate user
@@ -150,6 +143,20 @@ async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
         "role": user["role"] if isinstance(user, dict) else user.role,
         "phone_number": user.get("phone_number") if isinstance(user, dict) else user.phone_number
     }
+    
+    # If user is a student, fetch student_ID and room_ID
+    if (user["role"] if isinstance(user, dict) else user.role) == "student":
+        from models.models import Student
+        student_record = db.query(Student).filter(Student.user_ID == user_data["id"]).first()
+        if student_record:
+            user_data["student_ID"] = student_record.student_ID
+            user_data["room_ID"] = student_record.room_ID
+        else:
+            # Student record doesn't exist - this is an error
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Student record not found. Please contact administrator."
+            )
     
     return LoginResponse(
         access_token=access_token,

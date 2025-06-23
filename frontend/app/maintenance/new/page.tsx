@@ -13,7 +13,7 @@ import { Building2, ArrowLeft, Send, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { apiClient } from "@/lib/api"
+import { apiClient, User } from "@/lib/api"
 
 interface Category {
   category_ID: number
@@ -32,7 +32,7 @@ export default function NewMaintenanceRequestPage() {
   const [loading, setLoading] = useState(false)
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [error, setError] = useState("")
-  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   useEffect(() => {
     const user = AuthService.getUser()
@@ -77,12 +77,19 @@ export default function NewMaintenanceRequestPage() {
 
       // Create maintenance request
       const requestData = {
-        student_ID: currentUser.id, // This should be the student ID from your database
-        room_ID: 1, // This should come from the user's room assignment
+        student_ID: currentUser.student_ID || 0, // Use the actual student_ID from login
+        room_ID: currentUser.room_ID || 1, // Use the actual room_ID from login
         category_ID: Number.parseInt(formData.category_ID),
         description: formData.description,
-        availability: formData.availability || null,
+        availability: formData.availability || undefined,
         status_ID: 1, // Default to "Pending" status
+      }
+
+      console.log("🔧 Creating maintenance request:", requestData) // Debug log
+
+      // Validate that student_ID exists
+      if (!currentUser.student_ID) {
+        throw new Error("Student ID not found. Please contact administrator.")
       }
 
       await apiClient.createMaintenanceRequest(requestData)
@@ -97,7 +104,7 @@ export default function NewMaintenanceRequestPage() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev: typeof formData) => ({ ...prev, [field]: value }))
     if (error) setError("") // Clear error when user starts typing
   }
 
@@ -169,7 +176,7 @@ export default function NewMaintenanceRequestPage() {
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((category) => (
+                        {categories.map((category: Category) => (
                           <SelectItem key={category.category_ID} value={category.category_ID.toString()}>
                             <div>
                               <div className="font-medium">{category.category_name}</div>
