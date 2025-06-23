@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 # Environment-specific engine configuration
 def get_engine_config():
-    """Get database engine configuration based on environment"""
+    """Get database engine configuration based on environment"""    
     base_config = {
-        "echo": settings.DEBUG,
+        "echo": False,  # Changed from settings.DEBUG to False to reduce SQL logging
         "pool_pre_ping": True,
         "pool_recycle": settings.DB_POOL_RECYCLE,
         "pool_timeout": 20,

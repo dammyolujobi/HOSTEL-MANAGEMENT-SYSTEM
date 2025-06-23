@@ -8,47 +8,36 @@ from urllib.parse import quote_plus
 load_dotenv()
 
 class Settings(BaseSettings):
-    # Environment detection
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development, production, local
+    # Force local environment - completely ignore any cloud settings
+    ENVIRONMENT: str = "local"  # Force local development
     
-    # Database components with environment-specific defaults
-    DB_HOST: str = os.getenv("DB_HOST", "localhost" if os.getenv("ENVIRONMENT") == "local" else "hopper.proxy.rlwy.net")
-    DB_PORT: int = int(os.getenv("DB_PORT", "3306" if os.getenv("ENVIRONMENT") == "local" else "14988"))
-    DB_USER: str = os.getenv("DB_USER", "root")
-    DB_PASSWORD: str = os.getenv("DB_PASSWORD", "RBSkzqpuAeCGdVankDFOXPbNSlEXybHS")
-    DB_NAME: str = os.getenv("DB_NAME", "hostel_management" if os.getenv("ENVIRONMENT") == "local" else "railway")
+    # Local database settings only - hardcoded to avoid any Railway influence
+    DB_HOST: str = "localhost"  # Force localhost
+    DB_PORT: int = 3307  # Force local MySQL port
+    DB_USER: str = "root"  # Force local MySQL user
+    DB_PASSWORD: str = "Jesus@lord10"  # Force local MySQL password
+    DB_NAME: str = "hostelmanagementsystem"  # Force local database name
     DB_CHARSET: str = "utf8mb4"
-    
-    # Database connection settings based on environment
+      # Database connection settings for local development
     @computed_field
     @property
     def DB_CONNECTION_TIMEOUT(self) -> int:
-        if self.ENVIRONMENT == "production":
-            return 20  # Shorter timeout for Railway
-        elif self.ENVIRONMENT == "local":
-            return 60  # Longer timeout for local dev
-        return 30  # Default for development
+        return 60  # Longer timeout for local dev
     
     @computed_field
     @property 
     def DB_POOL_SIZE(self) -> int:
-        if self.ENVIRONMENT == "production":
-            return 3  # Smaller pool for Railway
-        return 5  # Larger pool for local/dev
+        return 5  # Good pool size for local dev
     
     @computed_field
     @property
     def DB_MAX_OVERFLOW(self) -> int:
-        if self.ENVIRONMENT == "production":
-            return 2  # Conservative overflow for Railway
-        return 10  # More overflow for local/dev
+        return 10  # More overflow for local dev
     
     @computed_field
     @property
     def DB_POOL_RECYCLE(self) -> int:
-        if self.ENVIRONMENT == "production":
-            return 1800  # 30 minutes for Railway (connection timeout)
-        return 3600  # 1 hour for local/dev    
+        return 3600  # 1 hour for local dev
     # JWT
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-super-secret-key-change-this-in-production")
     ALGORITHM: str = "HS256"
@@ -93,7 +82,9 @@ class Settings(BaseSettings):
             base_origins = [
                 "http://localhost:3000", 
                 "http://127.0.0.1:3000",
-                "http://localhost:8080",
+                "http://localhost:3001",  # Frontend might start on 3001 if 3000 is busy
+                "http://127.0.0.1:3001",
+                "http://localhost:8000",
                 "http://127.0.0.1:8080"
             ]
         
@@ -102,25 +93,20 @@ class Settings(BaseSettings):
             env_origins = [url.strip() for url in self.ALLOWED_ORIGINS.split(',') if url.strip()]
             base_origins.extend(env_origins)
             
-        return list(set(base_origins))
-    
+        return list(set(base_origins))    
     @computed_field
     @property
     def DATABASE_URL(self) -> str:
-        """Construct DATABASE_URL from individual components with environment-specific drivers"""
+        """Construct DATABASE_URL from individual components - FORCE LOCAL ONLY"""
         password = quote_plus(self.DB_PASSWORD)
         
-        # Use different MySQL drivers based on environment
-        if self.ENVIRONMENT == "production":
-            # Use PyMySQL for Railway (more reliable for cloud)
-            driver = "mysql+pymysql"
-            ssl_params = "ssl_disabled=true"
-        else:
-            # Use mysqlconnector for local/dev
-            driver = "mysql+mysqlconnector" 
-            ssl_params = "ssl_disabled=true"
+        # Force local MySQL driver and settings only
+        driver = "mysql+mysqlconnector" 
+        ssl_params = "ssl_disabled=true"
             
-        return f"{driver}://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset={self.DB_CHARSET}&{ssl_params}"
+        url = f"{driver}://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset={self.DB_CHARSET}&{ssl_params}"
+        print(f"🔗 DATABASE_URL: {url}")  # Debug print to verify URL
+        return url
     
     class Config:
         env_file = ".env"

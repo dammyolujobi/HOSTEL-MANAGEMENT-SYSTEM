@@ -94,10 +94,13 @@ class HallOfficer(Base):
     __tablename__ = "Hall_Officer"
     manager_ID = Column(Integer, primary_key=True, autoincrement=True)
     user_ID = Column(Integer, ForeignKey("User.id", ondelete="CASCADE"), nullable=False, unique=True)
+    hall_ID = Column(Integer, ForeignKey("Hall.hall_ID", ondelete="SET NULL"))
     created_at = Column(DateTime, default=func.current_timestamp())
-      # Relationships
+    
+    # Relationships
     user = relationship("User", back_populates="hall_officer")
-    hall = relationship("Hall", back_populates="officer", uselist=False)
+    managed_hall = relationship("Hall", foreign_keys="Hall.manager_ID", back_populates="officer", uselist=False)
+    assigned_hall = relationship("Hall", foreign_keys="[HallOfficer.hall_ID]", uselist=False)
 
 class Hall(Base):
     __tablename__ = "Hall"
@@ -109,7 +112,7 @@ class Hall(Base):
     updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
     # Relationships
-    officer = relationship("HallOfficer", back_populates="hall")
+    officer = relationship("HallOfficer", foreign_keys=[manager_ID], back_populates="managed_hall")
     rooms = relationship("Room", back_populates="hall")
 
 class Room(Base):

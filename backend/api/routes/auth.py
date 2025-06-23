@@ -7,6 +7,7 @@ from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
 import os
+import logging
 from dotenv import load_dotenv
 
 from database.database import get_db
@@ -14,6 +15,8 @@ from models.models import User
 from schemas.schemas import LoginCredentials, LoginResponse, TokenData
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
@@ -24,23 +27,31 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Default Covenant University credentials - redirects to real accounts
+# Default credentials matching actual database users
 DEFAULT_CREDENTIALS = {
     "admin": {
-        "email": "admin@cu.edu.ng", 
+        "email": "admin@university.edu", 
         "password": "admin123",
-        "name": "System Administrator",
+        "name": "John Admin",
         "role": "admin"
-    },    "manager": {
-        "email": "hall.officer@cu.edu.ng",
-        "password": "manager123", 
-        "name": "Hall Officer",
-        "role": "manager"
     },
-    "officer": {
-        "email": "maintenance@cu.edu.ng",
-        "password": "officer123",
-        "name": "Maintenance Officer", 
-        "role": "officer"
+    "hall_officer": {
+        "email": "hall.officer@university.edu",
+        "password": "officer123", 
+        "name": "Hall Officer Demo",
+        "role": "hall officer"
+    },
+    "student": {
+        "email": "jane.student@university.edu",
+        "password": "student123",
+        "name": "Jane Student", 
+        "role": "student"
+    },
+    "maintenance_officer": {
+        "email": "bob.maintenance@university.edu",
+        "password": "maintenance123",
+        "name": "Bob MaintenanceOfficer",
+        "role": "maintenance officer"
     }
 }
 
@@ -59,14 +70,22 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against its hash"""
     try:
+        logger.debug(f"Verifying password. Hashed password starts with: {hashed_password[:10]}...")
+        logger.debug(f"Hashed password length: {len(hashed_password)}")
+        
         # Check if the stored password is already hashed (starts with $2b$)
         if not hashed_password.startswith('$2b$'):
-            # If it's not hashed, it's a plain text password (for demo/testing)
-            return plain_password == hashed_password
+            logger.debug("Password is not bcrypt hashed, comparing as plain text")
+            result = plain_password == hashed_password
+            logger.debug(f"Plain text comparison result: {result}")
+            return result
         
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        logger.debug("Password is bcrypt hashed, using bcrypt verification")
+        result = bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        logger.debug(f"Bcrypt verification result: {result}")
+        return result
     except (ValueError, TypeError) as e:
-        logger.warning(f"Password verification failed: {e}")
+        logger.warning(f"Password verification failed with error: {e}")
         return False
 
 def hash_password(password: str) -> str:
@@ -75,22 +94,20 @@ def hash_password(password: str) -> str:
 
 def authenticate_user(db: Session, email: str, password: str):
     """Authenticate a user with email and password"""
-    # Check database first for real users
+    # Check database for real users only
     user = db.query(User).filter(User.email == email).first()
-    if user and verify_password(password, user.password):
-        return user
+    if user:
+        logger.info(f"Found user {email} in database, checking password...")
+        logger.debug(f"Stored password starts with: {user.password[:10]}...")
+        password_valid = verify_password(password, user.password)
+        logger.info(f"Password verification result for {email}: {password_valid}")
+        if password_valid:
+            return user
+    else:
+        logger.info(f"User {email} not found in database")
     
-    # Fallback to default credentials only for non-student roles
-    for role, creds in DEFAULT_CREDENTIALS.items():
-        if creds["email"] == email and creds["password"] == password:
-            return {
-                "id": 0,  # Demo user ID for non-students only
-                "email": creds["email"],
-                "name": creds["name"],
-                "role": creds["role"],
-                "phone_number": None
-            }
-    
+    # No fallback to default credentials - only use database users for security
+    logger.warning(f"Authentication failed for {email}")
     return None
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -114,6 +131,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     return token_data
 
 @router.post("/login", response_model=LoginResponse)
+@router.post("/login/", response_model=LoginResponse)  # Handle both with and without trailing slash
 async def login(credentials: LoginCredentials, db: Session = Depends(get_db)):
     """
     Login endpoint that accepts university email format.

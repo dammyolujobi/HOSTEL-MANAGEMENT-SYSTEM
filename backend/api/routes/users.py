@@ -66,3 +66,23 @@ def delete_existing_user(user_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     return MessageResponse(message="User deleted successfully")
+
+@router.get("/{user_id}/hall")
+def get_user_hall(user_id: int, db: Session = Depends(get_db)):
+    """Get hall ID for a hall officer"""
+    from models.models import HallOfficer
+    
+    # First check if user exists and is a hall officer
+    user = get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.role != "hall officer":
+        return {"hall_id": None}
+    
+    # Get hall officer record and associated hall
+    hall_officer = db.query(HallOfficer).filter(HallOfficer.user_ID == user_id).first()
+    if not hall_officer:
+        return {"hall_id": None}
+    
+    return {"hall_id": hall_officer.hall_ID}

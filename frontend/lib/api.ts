@@ -4,8 +4,8 @@ const getApiBaseUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL
   }
   
-  // Default to production if no environment variable is set
-  return "https://hostel-management-system-production-cc97.up.railway.app"
+  // Default to local development for local work
+  return "http://localhost:8000"
 }
 
 const API_BASE_URL = getApiBaseUrl()
@@ -56,14 +56,7 @@ class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     // Always ensure we have the full /api/v1 prefix
     const fullEndpoint = endpoint.startsWith("/api/v1") ? endpoint : `/api/v1${endpoint}`
-    
-    // Add trailing slash for POST requests to avoid 307 redirects
-    let finalEndpoint = fullEndpoint
-    if (options.method === "POST" && !finalEndpoint.endsWith("/")) {
-      finalEndpoint += "/"
-    }
-    
-    const url = `${this.baseURL}${finalEndpoint}`
+    const url = `${this.baseURL}${fullEndpoint}`
 
     console.log("🌐 Making API request to:", url) // Debug log
 
@@ -146,6 +139,7 @@ class ApiClient {
     student_id?: number
     status_id?: number
     category_id?: number
+    hall_id?: number
   }): Promise<MaintenanceRequest[]> {
     const searchParams = new URLSearchParams()
     if (params?.skip) searchParams.append("skip", params.skip.toString())
@@ -153,6 +147,7 @@ class ApiClient {
     if (params?.student_id) searchParams.append("student_id", params.student_id.toString())
     if (params?.status_id) searchParams.append("status_id", params.status_id.toString())
     if (params?.category_id) searchParams.append("category_id", params.category_id.toString())
+    if (params?.hall_id) searchParams.append("hall_id", params.hall_id.toString())
 
     const query = searchParams.toString()
     return this.request<MaintenanceRequest[]>(`/maintenance-requests/${query ? `?${query}` : ""}`)
@@ -165,6 +160,7 @@ class ApiClient {
   async createMaintenanceRequest(
     requestData: Omit<MaintenanceRequest, "issue_ID" | "submission_timestamp" | "last_updated">,
   ): Promise<MaintenanceRequest> {
+    console.log("Creating maintenance request with data:", requestData)
     return this.request<MaintenanceRequest>("/maintenance-requests/", {
       method: "POST",
       body: JSON.stringify(requestData),
@@ -188,11 +184,47 @@ class ApiClient {
   }
 
   async getActiveRequests(): Promise<MaintenanceRequest[]> {
-    return this.request<MaintenanceRequest[]>("/maintenance-requests/active/")
+    return this.request<MaintenanceRequest[]>("/maintenance-requests/active")
   }
 
   async getRequestsByHall(hallId: number): Promise<MaintenanceRequest[]> {
-    return this.request<MaintenanceRequest[]>(`/maintenance-requests/hall/${hallId}/`)
+    return this.request<MaintenanceRequest[]>(`/maintenance-requests?hall_id=${hallId}`)
+  }
+
+  // Get Hall Officer's Hall ID
+  async getHallOfficerHallId(userId: number): Promise<{ hall_id: number | null }> {
+    return this.request<{ hall_id: number | null }>(`/users/${userId}/hall`)
+  }
+
+  // Status Update Methods
+  async updateRequestStatus(requestId: number, statusId: number): Promise<MaintenanceRequest> {
+    return this.request<MaintenanceRequest>(`/maintenance-requests/${requestId}/status/${statusId}`, {
+      method: "PATCH",
+    })
+  }
+
+  async markRequestInProgress(requestId: number): Promise<MaintenanceRequest> {
+    return this.request<MaintenanceRequest>(`/maintenance-requests/${requestId}/in-progress`, {
+      method: "PATCH",
+    })
+  }
+
+  async markRequestComplete(requestId: number): Promise<MaintenanceRequest> {
+    return this.request<MaintenanceRequest>(`/maintenance-requests/${requestId}/complete`, {
+      method: "PATCH",
+    })
+  }
+
+  async markRequestUnderReview(requestId: number): Promise<MaintenanceRequest> {
+    return this.request<MaintenanceRequest>(`/maintenance-requests/${requestId}/under-review`, {
+      method: "PATCH",
+    })
+  }
+
+  async reopenRequest(requestId: number): Promise<MaintenanceRequest> {
+    return this.request<MaintenanceRequest>(`/maintenance-requests/${requestId}/reopen`, {
+      method: "PATCH",
+    })
   }
 }
 

@@ -12,8 +12,6 @@ export interface LoginResponse {
     email: string
     role: string
     phone_number?: string
-    student_ID?: number  // Only present for students
-    room_ID?: number     // Only present for students
   }
   expires_in: number
 }
@@ -28,8 +26,8 @@ export class AuthService {
       return process.env.NEXT_PUBLIC_API_URL
     }
     
-    // Default to production if no environment variable is set
-    return "https://hostel-management-system-production-cc97.up.railway.app"
+    // Default to local development
+    return "http://localhost:8000"
   }
   
   private static API_BASE_URL = AuthService.getApiBaseUrl()
@@ -39,7 +37,7 @@ export class AuthService {
       console.log("🔐 Attempting login with:", credentials.email)
       console.log("🌐 API URL:", `${this.API_BASE_URL}/api/v1/auth/login`)
 
-      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/login/`, {
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -121,7 +119,7 @@ export class AuthService {
 
   static async forgotPassword(email: string): Promise<void> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/forgot-password/`, {
+      const response = await fetch(`${this.API_BASE_URL}/api/v1/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

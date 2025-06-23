@@ -33,7 +33,7 @@ export default function LoginPage() {
       const response = await AuthService.login(formData)
 
       // Redirect based on user role from backend response
-      const userRole = response.user.role.toLowerCase()
+      const userRole = response.user.role.toLowerCase().replace(' ', '_')
       router.push(`/dashboard?role=${userRole}`)
     } catch (err: any) {
       setError(err.message || "Invalid email or password. Please try again.")
@@ -54,10 +54,10 @@ export default function LoginPage() {
 
     try {
       const response = await AuthService.login({ email, password })
-      const userRole = response.user.role.toLowerCase()
+      const userRole = response.user.role.toLowerCase().replace(' ', '_')
       router.push(`/dashboard?role=${userRole}`)
     } catch (err: any) {
-      setError("Demo account not available. Please contact administrator.")
+      setError(err.message || "Login failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -159,7 +159,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("john.doe@stu.cu.edu.ng", "student123")}
+                  onClick={() => handleDemoLogin("jane.student@university.edu", "student123")}
                   disabled={isLoading}
                 >
                   Student Demo
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("maintenance@cu.edu.ng", "officer123")}
+                  onClick={() => handleDemoLogin("bob.maintenance@university.edu", "maintenance123")}
                   disabled={isLoading}
                 >
                   Officer Demo
@@ -175,7 +175,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("hall.officer@cu.edu.ng", "officer123")}
+                  onClick={() => handleDemoLogin("hall.officer@university.edu", "officer123")}
                   disabled={isLoading}
                 >
                   Hall Officer Demo
@@ -183,7 +183,7 @@ export default function LoginPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleDemoLogin("admin@cu.edu.ng", "admin123")}
+                  onClick={() => handleDemoLogin("admin@university.edu", "admin123")}
                   disabled={isLoading}
                 >
                   Admin Demo

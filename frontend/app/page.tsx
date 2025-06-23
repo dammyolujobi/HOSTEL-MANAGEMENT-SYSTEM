@@ -58,10 +58,10 @@ export default function HomePage() {
     try {
       // Use the correct demo credentials from your backend
       const demoCredentials = {
-        student: { email: "john.doe@stu.cu.edu.ng", password: "student123" },
-        officer: { email: "maintenance@cu.edu.ng", password: "officer123" },
-        hall_officer: { email: "hall.officer@cu.edu.ng", password: "officer123" },
-        admin: { email: "admin@cu.edu.ng", password: "admin123" },
+        student: { email: "jane.student@university.edu", password: "student123" },
+        officer: { email: "bob.maintenance@university.edu", password: "maintenance123" },
+        hall_officer: { email: "hall.officer@university.edu", password: "officer123" },
+        admin: { email: "admin@university.edu", password: "admin123" },
       }
 
       const credentials = demoCredentials[role as keyof typeof demoCredentials]
@@ -193,7 +193,7 @@ export default function HomePage() {
                           <Users className="h-4 w-4 mr-2" />
                           Student Dashboard
                         </div>
-                        <span className="text-xs text-gray-500">john.doe@stu.cu.edu.ng</span>
+                        <span className="text-xs text-gray-500">jane.student@university.edu</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -205,7 +205,7 @@ export default function HomePage() {
                           <Wrench className="h-4 w-4 mr-2" />
                           Maintenance Officer
                         </div>
-                        <span className="text-xs text-gray-500">maintenance@cu.edu.ng</span>
+                        <span className="text-xs text-gray-500">bob.maintenance@university.edu</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -217,7 +217,7 @@ export default function HomePage() {
                           <Building2 className="h-4 w-4 mr-2" />
                           Hall Officer
                         </div>
-                        <span className="text-xs text-gray-500">hall.officer@cu.edu.ng</span>
+                        <span className="text-xs text-gray-500">hall.officer@university.edu</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -229,7 +229,7 @@ export default function HomePage() {
                           <BarChart3 className="h-4 w-4 mr-2" />
                           Administrator
                         </div>
-                        <span className="text-xs text-gray-500">admin@cu.edu.ng</span>
+                        <span className="text-xs text-gray-500">admin@university.edu</span>
                       </Button>
                     </div>
                     {isLoading && <p className="text-sm text-center text-gray-500">Connecting to backend...</p>}
@@ -287,13 +287,13 @@ export default function HomePage() {
                 {/* Debug Info */}
                 <div className="mt-4 p-3 bg-gray-50 rounded text-xs">
                   <p>
-                    <strong>Backend URL:</strong> https://hostel-management-system-production-cc97.up.railway.app
+                    <strong>Backend URL:</strong> http://localhost:8000
                   </p>
                   <p>
                     <strong>Status:</strong> {connectionStatus.message}
                   </p>
                   <p>
-                    <strong>Frontend URL:</strong> https://v0-frontend-build-with-next-js.vercel.app
+                    <strong>Frontend URL:</strong> http://localhost:3000 (Local Development)
                   </p>
                 </div>
               </CardContent>
@@ -367,7 +367,7 @@ export default function HomePage() {
             <p className="text-gray-400">Complete hostel management solution for educational institutions.</p>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 HostelMS. All rights reserved.</p>
+            <p>&copy; 2025 HostelMS. All rights reserved.</p>
           </div>
         </div>
       </footer>
